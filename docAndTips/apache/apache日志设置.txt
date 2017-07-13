@@ -1,0 +1,71 @@
+﻿如何按日期生成apache日志文件及限制apache日志文件大小(2011-03-24 16:21:29)转载▼标签： freebsdapache错误日志rotatelogs滚动日志删除日志杂谈  
+用到apache自带的rotatelogs小工具
+
+语法如下：
+rotatelogs [ -l ] logfile [ rotationtime [ offset ]] | [ filesizeM ]
+
+参数解释：
+-l ：使用本地时间代替GMT时间作为时间基准。注意：在一个改变GMT偏移量(比如夏令时)的环境中使用-l会导致不可预料的结果。
+logfile：它加上基准名就是日志文件名。如果logfile中包含"%"，则它会被视为用于strftime()的格式字符串；否则它会被自动加上以秒为单
+
+位的".nnnnnnnnnn"后缀。这两种格式都表示新的日志开始使用的时间。
+rotationtime ：日志文件滚动的以秒为单位的间隔时间。
+offset ：相对于UTC的时差的分钟数。如果省略，则假定为"0"并使用UTC时间。比如，要指定UTC时差为"-5小时"的地区的当地时间，则此参数
+
+应为"-300"。
+filesizeM ：指定以filesizeM文件大小滚动，而不是按照时间或时差滚动。
+
+例子：
+1、按时间滚动日志文件：
+错误日志：ErrorLog "|/data/apache/bin/rotatelogs 日志存放目录/%Y%m%d_error.log 86400 480"
+访问日志：CustomLog "|/data/apache/bin/rotatelogs 日志存放目录/%Y%m%d_access.log 86400 480" common
+
+其中：
+      /data/apache：为apache的安装目录，根据自己实际情况确定；
+      86400：秒，24小时，表示生成的日志文件按天滚动，也就是每天生成一个日志文件；
+      480：分，时间偏移。
+同理可以按小时滚动日志文件，每隔一个小时，几个小时。。。生成一个日志文件。
+
+扩展：可以写个脚本定时删除日志文件，只保留几天的日志，如果网站访问量比较大，一天会生成几十上百M甚至更大的日志文件，既占硬盘又影响服务器性能。
+
+2、按大小滚动日志文件：
+错误日志：ErrorLog "|/data/apache/bin/rotatelogs -l 日志存放目录/%Y%m%d_error.log 5M"
+访问日志：CustomLog "|/data/apache/bin/rotatelogs -l 日志存放目录/%Y%m%d_access.log 5M" common
+
+当日志文件达到5M时，滚动该日志文件。
+
+ 
+
+apache日志管理
+
+web服务器日志轮循比较好的方式有三种：
+第一种方法是利用Linux系统自身的日志文件轮循机制：logrotate；
+第二种方法是利用apache自带的日志轮循程序rotatelogs；
+第三种是使用在apache的FAQ中推荐发展已经比较成熟的一个日志轮循工具cronolog。
+
+这里我给大家带来的是用apache自带的日志轮循程序rotatelogs，并用shell脚本定期删除日志文件，只保留近3天的文件，以免日志文件占满
+磁盘空间。
+修改主配置文件httpd.conf
+找到以下内容，并修改成：
+ErrorLog /var/log/httpd/error_log
+CustomLog "|/usr/local/apache2/bin/rotatelogs  /var/log/httpd/access_log 86400 400M" combined
+86400    ---日志滚动的时间是一天
+400      ---日志文件最大400M就滚动
+combined ---采用复合格式
+
+然后建立清除日志文件的shell脚本，文件名为clean_log
+#! /bin/bash
+logdir=/var/log/httpd
+cd ${logdir}
+declare -i filesum=`ls access_log.* | wc -l`
+declare -i delnum=$filesum-3
+if [ "${delnum}" -ge 1 ];then
+rm -rf `ls -tr access_log.* | head -${delnum}`
+fi
+
+chmod 755 clean_log
+这样就保留了最近3天的日志文件。
+
+建立自动化任务
+01 04 * * * /usr/local/crontab/clean_log
+ok，搞定，就这么简单。这样你就不用不必为日见增大的日志文件烦恼了！

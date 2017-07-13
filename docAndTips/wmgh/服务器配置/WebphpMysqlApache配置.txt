@@ -1,0 +1,208 @@
+﻿一、系统设置
+1.swap设置：
+dd if=/dev/zero of=/swap bs=1024 count=4096000
+mkswap swap 创建交换分区
+swapon swap 激活
+/swap swap swap defaults 0 0 配置fstab以系统启动时自动挂载
+
+二、web根目录
+1. temp patch 要有777权限
+
+三、 配置php.ini
+error_reporting = E_ALL | E_STRICT & ~E_NOTICE
+log_errors = On
+error_log = /alidata/log/php/php-error
+default_charset = "utf-8"
+file_uploads = On
+upload_tmp_dir =/tmp
+upload_max_filesize = 8M
+max_file_uploads = 20
+date.timezone =PRC
+session.save_path = "/alidata/www/iwmgh.com/temp/session"
+
+四、mysql配置
+基本配置
+[client]
+port = 3306
+socket = /tmp/mysql.sock
+[mysqld]
+port = 3306
+socket = /tmp/mysql.sock
+datadir=/alidata/server/mysql/var
+slow_query_log=1
+slow_query_log_file=/alidata/log/mysql/slow.log
+long_query_time = 3
+log-error=/alidata/log/mysql/mysql-error.log
+[mysql]
+auto-rehash
+
+
+账号和权限配置
+root:
+create user root@'%';
+update mysql.user set password=password('123456') where user='root';
+grant all privileges on *.* to root@'%' with grant option;
+
+app_user:
+create user app_user@127.0.0.1;
+flush privileges;
+update mysql.user set password=password('123456') where user='app_user';
+grant select,insert,update,delete on `words_tool`.* to app_user@'127.0.0.1';
+grant file on *.* to app_user@'127.0.0.1';
+flush privileges;
+
+gtd_user:
+create user gtd_user@127.0.0.1; (如果不行，用insert强行插入)
+flush privileges;
+update mysql.user set password=password('123456') where user='gtd_user';
+grant select,insert,update,delete on `gtd`.* to gtd_user@'127.0.0.1';
+flush privileges;
+
+reader：
+create user reader@'%';
+flush privileges;
+update mysql.user set password=password('123456789') where user='reader';
+grant usage on *.* to reader@'%';
+grant select on `words_tool`.* to reader@'%';
+grant select on `gtd`.* to reader@'%';
+flush privileges;
+
+隔离等级：
+set global transaction isolation level read committed;
+
+
+
+【】问题php mysqli 能连接本地mysql 但无法连接远程的mysql。
+详情：错误信息mysqlnd cannot connect to MySQL 4.1+ using the old insecure authentication. Please use an administration tool to reset your password with the command SET PASSWORD = PASSWORD('your_existing_password'). This will store a new, and more secure, hash value in mysql.user. If this user is used in other scripts executed by PHP 5.2 or earlier you might need to remove the old-passwords flag from your my.cnf file
+
+解决：是由于PHP5.3开始使用MySqlND作为默认的MySql访问驱动，而且从这个版本开始将不再支持使用旧的用户接口链接Mysql了，
+其一: (使用AppServ在修改mysql密碼時要使用下列方法才行)
+mysql> SET PASSWORD FOR
+   ->'some_user'@'some_host' = OLD_PASSWORD('newpwd');
+
+其二:
+mysql> UPDATE mysql.user SET Password =OLD_PASSWORD('newpwd')
+   -> WHERE Host ='some_host' AND User = 'some_user';
+mysql> FLUSH PRIVILEGES;
+上面some_user, some_host, newpwd是要自己填入的
+
+
+
+五、apache配置
+1.httpd.conf
+ServerRoot "/alidata/server/httpd"
+User httpd_app
+Group httpd_app
+ServerAdmin service@iwmgh.com
+ServerName www.iwmgh.com:80
+DocumentRoot "/alidata/www" 
+
+目录控制：
+<Directory "/alidata/www/iwmgh.com/admin_tool/">
+    AllowOverride None
+    Options +Indexes
+    AuthType Basic
+#   AuthType Digest
+    AuthName "Give Your Name and Passwd"
+    Require valid-user
+    Order allow,deny
+    Allow from all
+#    AuthGroupFile /var
+    AuthUserFile /alidata/www_config_files/passwd/passwords
+</Directory>
+
+<Directory "/alidata/www/iwmgh.com/user_assistant/">
+    AllowOverride None
+    Options +Indexes
+    AuthType Basic
+#   AuthType Digest
+    AuthName "user_assistant"
+    Require valid-user
+    Order allow,deny
+    Allow from all 
+#    AuthGroupFile /var
+    AuthUserFile /alidata/www_config_files/passwd/userpasswd
+</Directory>
+
+<Directory "/alidata/www/test.iwmgh.com/">
+    AllowOverride None
+    Options +Indexes
+    AuthType Basic
+#   AuthType Digest
+    AuthName "Give Your Name and Passwd"
+    Require valid-user
+    Order allow,deny
+    Allow from all 
+#    AuthGroupFile /var
+    AuthUserFile /alidata/www_config_files/passwd/passwords
+</Directory>
+
+<Directory "/alidata/www/phpmyadmin.iwmgh.com/">
+    AllowOverride None
+    Options +Indexes
+    AuthType Basic
+#   AuthType Digest
+    AuthName "Give Your Name and Passwd"
+    Require valid-user
+    Order allow,deny
+    Allow from all 
+#    AuthGroupFile /var
+    AuthUserFile /alidata/www_config_files/passwd/passwords
+</Directory>
+
+<Directory "/alidata/www/iwmgh.com/admin_tool/statistics">
+    AllowOverride None
+    Options +Indexes
+    AuthType Basic
+#   AuthType Digest
+    AuthName "user_assistant"
+    Require valid-user
+    Order allow,deny
+    Allow from all
+#    AuthGroupFile /var
+    AuthUserFile /alidata/www_config_files/passwd/stats_password
+</Directory>
+
+
+主机设置：
+<VirtualHost *:80>
+    ServerAdmin ygy358585315@163.com
+    DocumentRoot "/alidata/www/iwmgh.com"
+    ServerName iwmgh.com
+    ServerAlias www.iwmgh.com
+    ErrorLog "| /alidata/server/httpd/bin/rotatelogs -l /alidata/log/httpd/iwmgh.com/error_log_%Y%m%d 86400"
+    CustomLog "| /alidata/server/httpd/bin/rotatelogs -l /alidata/log/httpd/iwmgh.com/access_log_%Y%m%d 86400" common
+</VirtualHost>
+
+
+<VirtualHost *:80>
+    ServerAdmin ygy358585315@163.com
+    DocumentRoot "/alidata/www/phpmyadmin.iwmgh.com"
+    ServerName phpmyadmin.iwmgh.com
+    ServerAlias www.phpmyadmin.iwmgh.com
+    ErrorLog "| /alidata/server/httpd/bin/rotatelogs -l /alidata/log/httpd/phpmyadmin/error_log_%Y%m%d 86400"
+    CustomLog "| /alidata/server/httpd/bin/rotatelogs -l /alidata/log/httpd/phpmyadmin/access_log_%Y%m%d 86400" common
+</VirtualHost>
+
+
+<VirtualHost *:80>
+    ServerAdmin ygy358585315@163.com
+    DocumentRoot "/alidata/www/team_tools"
+    ServerName gtd.iwmgh.com
+    ServerAlias www.gtd.iwmgh.com
+    ErrorLog "| /alidata/server/httpd/bin/rotatelogs -l /alidata/log/httpd/team_tools/error_log_%Y%m%d 186400"
+    CustomLog "| /alidata/server/httpd/bin/rotatelogs -l /alidata/log/httpd/team_tools/access_log_%Y%m%d 86400" common
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerAdmin ygy358585315@163.com
+    DocumentRoot "/alidata/www/download"
+    ServerName download.iwmgh.com
+    ServerAlias www.download.iwmgh.com
+    ErrorLog "| /alidata/server/httpd/bin/rotatelogs -l /alidata/log/httpd/download/error_log_%Y%m%d 86400"
+    CustomLog "| /alidata/server/httpd/bin/rotatelogs -l /alidata/log/httpd/download/access_log_%Y%m%d 86400" common
+</VirtualHost>
+
+
+
+~

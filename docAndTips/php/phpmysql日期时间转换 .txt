@@ -1,0 +1,40 @@
+﻿写过PHP+MySQL的程序员都知道有时间差，UNIX时间戳和格式化日期是我们常打交道的两个时间表示形式，Unix时间戳存储、处理方便，但是不直观，格式化日期直观，但是处理起来不如Unix时间戳那么自如，所以有的时候需要互相转换，下面给出互相转换的几种转换方式。
+ 
+一、在MySQL中完成
+ 
+　　这种方式在MySQL查询语句中转换，优点是不占用PHP解析器的解析时间，速度快，缺点是只能用在数据库查询中，有局限性。
+ 
+1. UNIX时间戳转换为日期用函数： FROM_UNIXTIME()
+ 
+一般形式：select FROM_UNIXTIME(1156219870);
+ 
+2. 日期转换为UNIX时间戳用函数： UNIX_TIMESTAMP()
+ 
+一般形式：Select UNIX_TIMESTAMP(’2006-11-04 12:23:00′); 
+ 
+举例：mysql查询当天的记录数：
+ 
+$sql=”select * from message Where DATE_FORMAT(FROM_UNIXTIME(chattime),’%Y-%m-%d’) = DATE_FORMAT(NOW(),’%Y-%m-%d’) order by id desc”;
+ 
+当然大家也可以选择在PHP中进行转换，下面说说在PHP中转换。
+ 
+二、在PHP中完成
+ 
+　　这种方式在PHP程序中完成转换，优点是无论是不是数据库中查询获得的数据都能转换，转换范围不受限制，缺点是占用PHP解析器的解析时间，速度相对慢。
+ 
+1. UNIX时间戳转换为日期用函数： date()
+ 
+一般形式：date('Y-m-d H:i:s', 1156219870);
+ 
+2. 日期转换为UNIX时间戳用函数：strtotime()
+ 
+一般形式：strtotime('2010-03-24 08:15:42')；
+
+
+
+三、日期使用
+select count(*) from luntan_links where f_a_uId=? and ll_dtTime > date_format(now() - interval 7 day ,'%Y-%m-%d')
+
+
+
+

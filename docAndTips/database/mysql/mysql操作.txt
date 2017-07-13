@@ -1,0 +1,87 @@
+﻿【恢复数据库】
+初次安装mysql的话需要先设置好default-character-set=utf8和character-set-server=utf8后再恢复数据表，否则中文字符串写入会失败
+drop database words_tool;
+create database words_tool;
+use words_tool;
+source ****.sql;
+
+
+
+显示数据库执行状态 show processlist;
+事务 begin;或auto commit = 0;commit;
+
+####################################################################################
+#####################################################################################
+
+【创建用户的3种方法】
+1.create user new_user[@主机] identified by 'new_user_password';
+3.insert user(host,user,password) values('%','new_user',password('new_user_password'));
+
+【删除用户】
+delete from mysql.user where user ='yushan'或drop user user [, user] ...
+
+【修改密码的3种方法】
+1.update mysql.user set password=password('123456') where user='root';明文密码
+  或密文密码 update user set password='*5306FB376...........18DE65F3' where user='root';
+2.SET PASSWORD FOR root=PASSWORD('123456');
+3.mysqladmin -uroot -p旧密码 password 新密码;
+
+
+
+查看当前用户：select user(); 
+查看所有用户：select Host,User,Password from mysql.user;
+重命名用户：rename user aa to bb;
+查看用户xxx的权限：show grants for xxx;
+
+
+
+【授权】
+grant all on *.* TO 'myuser'@'192.168.1.3' IDENTIFIED BY'mypassword'WITH GRANT OPTION; 
+【撤权】
+revoke select, lock tables mysql.user from jss_grant@10.0.0.99;
+【权限说明：
+The only priv_type values you can specify for a table are SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, INDEX, and ALTER.
+
+"FILE" is only assigned as a GLOBAL permission
+
+" The EXECUTION, FILE, PROCESS, RELOAD, REPLICATION CLIENT, REPLICATION SLAVE, SHOW DATABASES, SHUTDOWN, and SUPER privileges are administrative privileges that can only be granted globally (using ON *.* syntax)."】
+
+【mysql安全注意项】
+1.如果客户端和服务器端的连接需要跨越并通过不可信任的网络，那么就需要使用SSH隧道来加密该连接的通信。
+2.用set password语句来修改用户的密码，三个步骤，先“mysql -u root”登陆数据库系统，然后“mysql> update mysql.user set password=password('newpwd')”，最后执行“flush privileges”就可以了。
+4.除了root用户外的其他任何用户不允许访问mysql主数据库中的user表;
+
+
+
+
+
+1.查看当前会话隔离级别 select @@tx_isolation; 
+2.查看系统当前隔离级别 select @@global.tx_isolation;
+3.设置当前会话隔离级别 set session transaction isolation level repeatable read;
+4.设置系统当前隔离级别 set global transaction isolation level repeatable read;
+
+
+******************************************************
+系统上行锁的争夺情况 : 
+show status like 'innodb_row_lock%';
+
+通过设置InnoDB Monitors来进一步观察发生锁冲突的表、数据行等，启动后一定要记得关闭：
+CREATE TABLE innodb_monitor(a INT) ENGINE=INNODB;
+以用下面的语句来进行查看：
+Show innodb status\G;
+监视器可以通过发出下列语句来停止查看：
+DROP TABLE innodb_monitor;
+
+
+**********************************************************
+
+
+
+
+
+
+
+
+
+
+

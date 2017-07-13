@@ -1,0 +1,127 @@
+﻿cat /proc/cpuinfo | grep 'physical id'|sort|uniq|wc -l
+cat /proc/cpuinfo | grep 'processor'
+
+查内存
+free -m
+
+查硬盘及分区
+fdisk -l
+
+磁盘空间使用情况
+df -h
+
+
+
+查看硬盘io性能(iostat命令可通过yum install sysstat安装)
+iostat -d -x -k1 10
+
+
+查某目录的大小
+du -sh /data
+
+
+分区导入导出
+dd
+
+
+查平均负载
+uptime  或 w  或 top
+
+
+
+监控系统的整体性能
+vmstat
+
+内核版本
+uname -a
+
+
+系统发行版本信息（lsb可通过yum安装）
+lsb_release -a 
+
+
+查系统已载入模块
+lsmod
+
+
+网卡的配置信息位于
+/etc/sysconfig/network-scripts/ifcfg-****
+
+
+修改主机的hostname
+编辑 /etc/sysconfig/network
+
+
+静态主机地址映射表
+/etc/hosts
+
+
+dns服务器的地址
+/etc/resolv.conf 
+
+
+网络命令
+ifconfig   ping   
+
+显示网络连接，路由表，网络接口信息
+netstat
+
+查路由表
+netstat -rn   或  route -n
+
+
+查系统打开的文件
+lsof
+
+
+查看进程
+ps
+
+
+crontab防止脚本运行冲突
+*/10 * * * * (flock -s -t 0 /tmp/run_lock.lock /bin/curl localhost/docronJob.php 2>&1)
+
+
+
+流编辑器
+sed [-nefr] [n1,n2] action
+
+
+
+强大的find用于查找文件
+find pathname -options [-print -exec -ok...]
+
+pathname---指定目录中查找
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

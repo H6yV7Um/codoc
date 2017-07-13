@@ -1,0 +1,139 @@
+﻿PHP本身再老版本有一些问题，比如在 php4.3.10和php5.0.3以前有一些比较严重的bug，所以推荐使用新版。另外，目前闹的轰轰烈烈的SQL 　　Injection也是在PHP上有很多利用方式，所以要保证
+　　安全，PHP代码编写是一方面，PHP的配置更是非常关键。
+　　我们php手手工安装的，php的默认配置文件在 /usr/local/apache2/conf/php.ini，我们最主要就是要配置php.ini中的内容，让我们执行　　php能够更安全。整个PHP中的安全设置主要是为了防止phpshell和SQL Injection的攻击，一下我们慢慢探讨。我们先使用任何编辑工具打开　　/etc/local/apache2/conf/php.ini，如果你是采用其他方式安装，配置文件可能不在该目录。
+(1) 打开php的安全模式
+　　php的安全模式是个非常重要的内嵌的安全机制，能够控制一些php中的函数，比如system()，
+　　同时把很多文件操作函数进行了权限控制，也不允许对某些关键文件的文件，比如/etc/passwd，
+　　但是默认的php.ini是没有打开安全模式的，我们把它打开：
+　　safe_mode = on
+(2) 用户组安全
+　　当safe_mode打开时，safe_mode_gid被关闭，那么php脚本能够对文件进行访问，而且相同
+　　组的用户也能够对文件进行访问。
+　　建议设置为：
+　　safe_mode_gid = off
+　　如果不进行设置，可能我们无法对我们服务器网站目录下的文件进行操作了，比如我们需要
+　　对文件进行操作的时候。
+(3) 安全模式下执行程序主目录
+　　如果安全模式打开了，但是却是要执行某些程序的时候，可以指定要执行程序的主目录：
+　　safe_mode_exec_dir = D:/usr/bin
+　　一般情况下是不需要执行什么程序的，所以推荐不要执行系统程序目录，可以指向一个目录，
+　　然后把需要执行的程序拷贝过去，比如：
+
+　　safe_mode_exec_dir = D:/tmp/cmd
+
+　　但是，我更推荐不要执行任何程序，那么就可以指向我们网页目录：
+
+　　safe_mode_exec_dir = D:/usr/www
+
+(4) 安全模式下包含文件
+
+　　如果要在安全模式下包含某些公共文件，那么就修改一下选项：
+
+　　safe_mode_include_dir = D:/usr/www/include/
+
+　　其实一般php脚本中包含文件都是在程序自己已经写好了，这个可以根据具体需要设置。
+
+(5) 控制php脚本能访问的目录
+
+　　使用open_basedir选项能够控制PHP脚本只能访问指定的目录，这样能够避免PHP脚本访问
+　　不应该访问的文件，一定程度上限制了phpshell的危害，我们一般可以设置为只能访问网站目录：
+
+　　open_basedir = D:/usr/www
+
+(6) 关闭危险函数
+
+　　如果打开了安全模式，那么函数禁止是可以不需要的，但是我们为了安全还是考虑进去。比如，
+　　我们觉得不希望执行包括system()等在那的能够执行命令的php函数，或者能够查看php信息的
+　　phpinfo()等函数，那么我们就可以禁止它们：
+
+　　disable_functions = system,passthru,exec,shell_exec,popen,phpinfo
+
+　　如果你要禁止任何文件和目录的操作，那么可以关闭很多文件操作
+
+　　disable_functions = chdir,chroot,dir,getcwd,opendir,readdir,scandir,fopen,unlink,delete,copy,mkdir, 　　rmdir,rename,file,file_get_contents,fputs,fwrite,chgrp,chmod,chown
+
+　　以上只是列了部分不叫常用的文件处理函数，你也可以把上面执行命令函数和这个函数结合，
+　　就能够抵制大部分的phpshell了。
+
+(7) 关闭PHP版本信息在http头中的泄漏
+
+　　我们为了防止黑客获取服务器中php版本的信息，可以关闭该信息斜路在http头中：
+
+　　expose_php = Off
+
+　　比如黑客在 telnet www.12345.com 80 的时候，那么将无法看到PHP的信息。
+
+(8) 关闭注册全局变量
+
+　　在PHP中提交的变量，包括使用POST或者GET提交的变量，都将自动注册为全局变量，能够直接访问，
+　　这是对服务器非常不安全的，所以我们不能让它注册为全局变量，就把注册全局变量选项关闭：
+　　register_globals = Off
+　　当然，如果这样设置了，那么获取对应变量的时候就要采用合理方式，比如获取GET提交的变量var，
+　　那么就要用$_GET['var']来进行获取，这个php程序员要注意。
+
+(9) 打开magic_quotes_gpc来防止SQL注入
+
+　　SQL注入是非常危险的问题，小则网站后台被入侵，重则整个服务器沦陷，
+
+　　所以一定要小心。php.ini中有一个设置：
+
+　　magic_quotes_gpc = Off
+
+这个默认是关闭的，如果它打开后将自动把用户提交对sql的查询进行转换，
+　　比如把 ' 转为 \'等，这对防止sql注射有重大作用。所以我们推荐设置为：
+　　magic_quotes_gpc = On
+
+(10) 错误信息控制
+
+　　一般php在没有连接到数据库或者其他情况下会有提示错误，一般错误信息中会包含php脚本当
+　　前的路径信息或者查询的SQL语句等信息，这类信息提供给黑客后，是不安全的，所以一般服务器建议禁止错误提示：
+
+　　display_errors = Off
+
+　　如果你却是是要显示错误信息，一定要设置显示错误的级别，比如只显示警告以上的信息：
+
+　　error_reporting = E_WARNING & E_ERROR
+
+　　当然，我还是建议关闭错误提示。
+
+(11) 错误日志
+
+　　建议在关闭display_errors后能够把错误信息记录下来，便于查找服务器运行的原因：
+
+log_errors = On
+
+　　同时也要设置错误日志存放的目录，建议根apache的日志存在一起：
+
+　　error_log = D:/usr/local/apache2/logs/php_error.log
+
+　　注意：给文件必须允许apache用户的和组具有写的权限。
+
+
+　　MYSQL的降权运行
+
+　　新建立一个用户比如mysqlstart
+
+　　net user mysqlstart ****microsoft /add
+net localgroup users mysqlstart /del 
+
+　　不属于任何组
+
+　　如果MYSQL装在d:\mysql ，那么，给 mysqlstart 完全控制 的权限
+
+　　然后在系统服务中设置，MYSQL的服务属性，在登录属性当中，选择此用户 mysqlstart 然后输入密码，确定。
+
+　　重新启动 MYSQL服务，然后MYSQL就运行在低权限下了。
+
+　　如果是在windos平台下搭建的apache我们还需要注意一点，apache默认运行是system权限，
+　　这很恐怖，这让人感觉很不爽.那我们就给apache降降权限吧。 
+
+　　net user apache ****microsoft /add
+net localgroup users apache /del 
+
+　　ok.我们建立了一个不属于任何组的用户apche。 
+
+　　我们打开计算机管理器，选服务，点apache服务的属性，我们选择log on，选择this account，我们填入上面所建立的账户和密码，
+　　重启apache服务，ok，apache运行在低权限下了。 
+
+　　实际上我们还可以通过设置各个文件夹的权限，来让apache用户只能执行我们想让它能干的事情，给每一个目录建立一个单独能读写的用户。
+　　这也是当前很多虚拟主机提供商的流行配置方法哦，不过这种方法用于防止这里就显的有点大材小用了。

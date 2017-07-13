@@ -1,0 +1,33 @@
+﻿1. Javascript中闭包的特性彻底解决了Javascript私有成员的问题。
+ function testFn(){  
+       var Name;//定义Javascript私有成员  
+       this.setName = function(name){  
+          Name = name; //从当前执行环境中获取_Name  
+       }  
+       this.getName = function(){  
+          return Name;  
+       }  
+}// End testFn  
+var test = new testFn();  
+alert(typeof test._Name === "undefined")//true  
+test.setName("KenChen"); 
+
+2. 共有成员的实现
+function testFn(name){  
+   this.Name = name;  
+   this.getName = function(){  
+      return this.Name;  
+   }  
+}  
+var test = new testFn("KenChen");  
+test.getName(); //KenChen  
+test.Name = "CC";  
+est.getName();//CC 
+
+3.类静态变量的实现
+function testFn(){  
+}  
+testFn.Name = "KenChen";  
+alert(testFn.Name);//KenChen  
+testFn.Name = "CC";  
+alert(testFn.Name);//CC 

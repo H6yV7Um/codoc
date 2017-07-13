@@ -1,0 +1,26 @@
+﻿【不使用PHP的Weak属性】
+在.htaccess中停用全局变量
+php_flag register_globals 0
+
+在php.ini中停用全局变量
+register_globals = Off
+
+停用类似magic_quotes_gpc,magic_quotes_runtime,magic_quotes_sybase这些Magic Quotes
+在.htaccess文件中设置
+php_flag magic_quotes_gpc 0
+php_flag magic_quotes_runtime 0
+
+在php.ini中设置
+magic_quotes_gpc = Off
+magic_quotes_runtime = Off
+magic_quotes_sybase = Off
+
+【验证用户输入】服务器验证并确保用户输入数据值和类型都是期望的
+
+【避免交叉站点脚本攻击】
+在接受用户输入时，如果允许HTML格式输入将是非常危险的事情，因为这也就允许了JavaScript以不可预料的方式侵入后直接执行。哪怕只要有一个这样漏洞，cookie数据都可能被盗取进而导致用户的账户被盗取
+
+【预防SQL注入攻击】
+PHP基本没有提供任何工具来保护你的数据库，所以当你连接数据库时，你可以使用下面这个mysqli_real_escape_string 函数。
+$username = mysqli_real_escape_string( $GET['username'] );
+mysql_query( “SELECT * FROM tbl_employee WHERE username = ’”.$username.“‘”);

@@ -1,0 +1,486 @@
+﻿《mongodb数据操作》
+*插入和查询
+1.>db.inventory.insert({_id: 10, type: "misc", item: "card", qty: 15 } )
+2.>db.inventory.update({type:"book",item:"journal"},{$set:{qty:10}},{upsert:true})
+	creates a new document if no document in the inventory collection contains 
+	{ type:"books", item : "journal" }
+3.>db.inventory.find( {} )
+4.>db.inventory.find( { type: { $in: [ 'food', 'snacks' ] } } )
+5.>db.inventory.find( { type: 'food', price: { $lt: 9.95 } } )
+6.>db.inventory.find({ $or: [{qty:{$gt:100}},{ price:{$lt:9.95 } }]})
+7.>db.inventory.find({type:'food',$or:[{qty:{$gt:100}},{price:{$lt:9.95}}]})
+*关于子文档
+8.>db.inventory.find({producer:{company:'ABC123',address:'123 Street'}})
+9.>db.inventory.find( { 'producer.company': 'ABC123' } )
+*关于数组
+10.>db.inventory.find( { tags: [ 'fruit', 'food', 'citrus' ] } )
+	matches all documents where the value of the field tags is an array that holds
+	exactly three elements, ’fruit’, ’food’, and ’citrus’, in this order
+11.>db.inventory.find( { tags: 'fruit' } )matches all documents where the value 
+	of the field tags is an array that contains ’fruit’ as one of its elements
+12.>db.inventory.find( { 'tags.0' : 'fruit' } )match all documents where the value 
+	of the tags field is an array whose first element equals ’fruit’
+13.>db.inventory.find( { 'memos.0.by': 'shipping' } )selects all documents where
+	the memos contains an array whose first element (i.e. index is 0) is a subdocument 
+	with the field by with the value ’shipping’
+14.>db.inventory.find( { 'memos.by': 'shipping' } )selects all documents where the 
+	memos field contains an array that contains at least one subdocument with the 
+	field by with the value ’shipping’
+15.>db.inventory.find({'memos.memo': 'on time','memos.by':'shipping'})uses dot 
+	notation to query for documents where the value of the memos field is an array 
+	that has at least one subdocument that contains the field memo equal to ’on time’
+	and the field by equal to ’shipping’
+16.>db.inventory.find({memos:{$elemMatch:{memo:'on time',by:'shipping'}}})
+	uses $elemMatch to query for documents where the value of the memos field 
+	is an array that has at least one subdocument that contains the field memo 
+	equal to ’on time’ and the field by equal to ’shipping’
+*关于返回域
+17.>db.inventory.find( { type: 'food' }, { item: 1, qty: 1 } )returns all documents
+	that match the query. In the result set, only the item and qty fields and, 
+	by default, the _id field return in the matching documents
+18.>db.inventory.find( { type: 'food' }, { item: 1, qty: 1, _id:0 } )returns all 
+	documents that match the query. In the result set, only the item and qty fields 
+	return in the matching documents.	
+19.>db.inventory.find( { type: 'food' }, { type:0 } )returns all documents where 
+	the value of the type field is food. In the result set, the type field does
+	not return in the matching documents	
+*关于查询语句的分析
+20.>db.inventory.find( { type: 'food' } ).explain()Evaluate a query on the type 
+	field on the collection inventory that has an index on the type field.
+	>db.inventory.find( { type: 'food' } ).hint( { type: 1 } ).explain()
+	>db.inventory.find( { type: 'food' } ).hint( { type: 1, name: 1 } ).explain()
+	To manually compare the performance of a query using more than one index, 
+	you can use the hint() and explain() methods in conjunction
+*关于修改数据
+21.>db.inventory.update({type:"book"},{$inc:{qty:-1}},{multi:true})
+	By default, the update() method updates a single document that matches its 
+	selection criteria. Call the method with the multi option set to true to update 
+	multiple documents
+22.>db.inventory.save({_id:10,type:"misc",item:"placard"})completely replaces 
+	the document with the _id equal to 10 in the inventory collection
+23.>db.inventory.remove()removes all documents from the inventory collection
+24.>db.inventory.remove( { type : "food" } )removes all documents from the 
+	inventory collection where the type field equals food
+25.>db.inventory.remove( { type : "food" }, 1 )removes one document from the 
+	inventory collection where the type field equals food
+*关于事务
+26.Operations on a single document are always atomic with MongoDB databases; 
+	however, operations that involve multiple documents, which are often referred 
+	to as “transactions,” are not atomic.实现方法待研究
+27.Create Tailable Cursor待研究
+*写隔离
+28.>
+
+*关于索引
+29.>db.people.ensureIndex( { "phone-number": 1 } )creates an index on the 
+	phone-number field of the people collection
+30.>db.products.ensureIndex( { item: 1, category: 1, price: 1 } )create an 
+	index on the item, category, and price fields of the products collection
+31.>db.accounts.ensureIndex( { "tax-id": 1 }, { unique: true } )to create a 
+	unique index on the "tax-id": of the accounts collection to prevent storing 
+	multiple account records for the same legal entity
+32.>db.collection.ensureIndex( { a: 1 }, { unique: true, sparse: true } )
+	In many situations you will want to combine the unique constraint with the 
+	sparse option. When MongoDB indexes a field, if a document does not have a 
+	value for a field, the index entry for that item will be null. Since unique 
+	indexes cannot have duplicate values for a field, without the sparse option, 
+	MongoDB will reject the second document and all subsequent documents without 
+	the indexed field
+33.>db.collection.ensureIndex( { a: 1 }, { unique: true, dropDups: true } )
+	This will force MongoDB to create a unique index by deleting documents
+	with duplicate values when building the index
+34.>db.collection.ensureIndex( { _id: "hashed" } )To create a hashed index, 
+	specify hashed as the value of the index key, as in the following example
+35.>db.collection.ensureIndex( { a: 1 }, { background: true } )To create an 
+	index in the background, add the background argument to the ensureIndex() 
+	operation
+*Mongodb的数据模型参看官方文档
+
+
+
+
+
+*读优先和标签的使用
+db.collection.find().readPref({mode:'nearest',tags:[{'dc':'east'}]})
+
+*关于安全
+
+
+
+*零散的摘要
+1.The limit on the number of namespaces depend on the <database>.ns size. 
+	The namespace file defaults to 16 MB. To change the size of the new namespace 
+	file, start the server with the option --nssize <new size MB>.
+	For existing databases, after starting up the server with --nssize, run the 
+	db.repairDatabase() command from the mongo shell. For impacts and considerations 
+	on running db.repairDatabase()
+2.Some query operations are not selective. These operations cannot use indexes 
+	effectively or cannot use indexes at all.The inequality operators $nin and $ne 
+	are not very selective, as they often match a large portion of the index. As a
+	result, in most cases, a $nin or $ne query with an index may perform no better 
+	than a $nin or $ne query that must scan all documents in a collection.
+3.Queries that specify regular expressions, with inline JavaScript regular 
+	expressions or $regex operator expressions,cannot use an index with one exception. 
+	Queries that specify regular expression with anchors at the beginning of a string 
+	can use an index.
+4.GridFS is a specification for storing and retrieving files that exceed the 
+	BSON-document size limit of 16MB.GridFS is useful not only for storing files 
+	that exceed 16MB but also for storing any files for which you want access
+	without having to load the entire file into memory
+
+
+
+
+
+1.find查询一开始并没有立即向数据库查询，而在真正操作其预查询结果时，才真正的
+	去执行所有查询
+2.skip不宜忽略过大的数量，需要翻页时应该使用上页查询结果的id或时间做新的起始
+	查询排序条件，再利用limit
+3.随机选取文档时，不应使用skip，而是在每个文档里添加个随机键，
+	然后用findOne和$lt/$gt进行读取
+4.高级查询选项：$query之$orderby,$maxscan,$min,$max,$hint,$explain,$snapshot
+5.游标内幕：分服务器端和客户端，服务器端会在客户端发来终止要求或10分钟内没有
+	使用自动销毁（immortal函数可以阻止自动销毁功能）；客户端会根据实际情况（迭
+	代完成，或离开了使用域），由客户端驱动程序通知服务器销毁游标。
+6.索引，ensureIndex创建索引，每个集合最大索引数为64个，对于组合索引，如有
+	{"a":1,"b":1,"c":1,...,"z":1}这个组合索引了，那么也就自动有了{"a":1}，
+	{"a":1,"b":1}，{"a":1,"b":1,"c":1}等索引，索引对删除，插入和更新开销很大！！
+	建立索引要考虑的问题：
+	1）将会做什么样的查询，哪些键需要索引
+	2）每个键的索引方向是什么
+	3）如何应对扩展，有没有一种键的组合方式能使每次查询结果能更多的缓冲到内存中(数据集中)
+7.当对没有索引的键做sort排序时，当集合大到无法在内存中进行排序时，mongoDB就会报错
+8.当索引特别复杂时，一定要使用自定义名字，可用getLastError检查索引是否创建成功。
+9.索引管理：system.indexes保存每个索引的详细信息，system.namespaces也存有索引的
+	名字，集合名和索引名加起来长度不能超过127字节，若超过了这个值，则需要自定义索引名
+10.建立索引进可通过设置{"background":true}选项在后台进行，否则会阻塞进行(同时也会阻
+	塞期间的所有数据库请求)
+11.地理空间索引
+
+
+######## 数据库命令(MongoDB的高级功能) ########
+1.MongoDB中的命令其实是做为一种特殊的查询来实现的，这些查询是针对$cmd集合来执行的，
+	如:db.runcommand({"drop":"test"})与db.$cmd.findOne({"drop":"test"})是等价的
+2.列出所有命令db.listCommands()，常用命令：
+	{"buildInfo":1} -- 返回mongoDB服务器端的版本号和操作系统信息
+	{"collStats":collection} -- 返回collection集合的统计信息
+	{"distinct":collection,"key":key,"query":query} -- 列出collection集合中满足query条件所有key键的不同值
+	{"drop":collection} -- 删除collection集合中的所有数据
+	{"dropDatabase":1} -- 删除当前数据库所有数据
+	{"dropIndexes":collection, "index":name} -- 删除collection集合里名称为name的索引
+	{"findAndModify".....} -- 详细查文档
+	{"getLastError":1[,"w":w[,"wtimeout":timeout]]} -- 查看本集合上次操作的错误/状态信息，在台服务器...(后续)
+	{"isMaster":1} -- 查询本服务器是主还是从服务器
+	{"listCommands":1} -- 返回可在服务器上运行的命令及相关信息
+	{"ping":1} -- 检查服务器链接是否正常
+	{"renameCollection":a, "to":b} -- 将集合a重命名为b(a和b必须是完整的集合命名空间)
+	{"repairDatabase":1} -- 修复并压缩当前数据库(很耗时)
+	{"serverStatus":1} -- 返回服务器的管理信息
+	
+3.固定集合创建：db.createcollection("myColl",{capped:true,size:100000,max:100})创建大小为100000字节，最大可
+	存文档数量为100的固定集合myColl
+	db.runCommand({"convertToCapped":"test",size:10000})将普通test集合转换成大小10000字节的固定集合
+	
+4.GridFS (后续待研究)
+
+5.可通过db.eval("javascript_cmd_string")执行js代码，其执行时会锁住数据库，可用来模拟多文档事务；小心使用
+	使用不当会发生类似关系型数据库的注入攻击，如有
+	db.eval("function(){print('Hello,"+username+"!');}") 当username是用户可以输入的时候，当其输入：
+	"'); db.dropDatabase();print('"形如这行字符串时，上面的语句就变成：
+	db.eval("function(){print('Hello,'); db.dropDatabase();print('!');}")
+	PHP可通过限定作用域来防止，详细后续... 
+
+################### MongoDB管理 #################
+1.启动，mongod --help可以得到更多选项的信息，常见的有：
+	--dbpath指定数据目录，每个mongod进程都需要一个独立的数据目录(默认是/data/db/或C:\data\db\),mongod.lock会在
+	数据目录中被创建
+	--port指定监听端口，默认是27017
+	--fork以守护进程方式运行
+	--logpath日志输入文件，如果文件不存在且有写权限，会自动创建，log是覆盖式的写，加--logappend选项可变成追加式
+	--config指定配置文件，使用配置文件和使用命令行选项方式功能是一样的
+2.停止，可通过db.shutdownServer()或kill -2(SIGINT) pid或kill (SIGTERM) pid方式进行关闭，不能使用kill -9(SIGKILL)
+3.可通过httpserver进行管理，默认端口是监听端加1000，也可通过--nohttpinterface关闭该管理接口，--rest打开REST支持
+4.通过{"serverStatus":1}返回服务器的管理信息(信息丰富，分析方法待研究...)
+5.安全和认证，use admin;db.addUser("root","abcd");db.addUser("read_only","abcd",true);设置新用户，新密码
+	或改为只读都可以通过addUser来完成，mongod启动时加入--auth选项开启安全检查；
+	db.system.users.remove({"user":"read_only"})
+6.建议将MongoDB服务器布置在防火墙后面，或布置在只有服务器才能访问的网络中，要是必须让外网可访问的话，建议
+	使用--bindip选项进行ip绑定
+7.关于安全还可以通过--noscripting禁止服务器端运行javaScript
+8.备份和恢复方法：
+	1)通过mongodump和mongorestore可进行热备份和恢复，详细可通过--help查询帮助
+	2)通过fsync: a)同步数据到数据库文件并加锁use admin;db.runCommand({"fsync":1,"lock":1});
+		b)将数据目录做备份(直接拷贝)；c)解锁db.$cmd.sys.unlock.findOne();运行db.currentOp()确保已解锁;
+	3)主从备份：当数据库异常宕掉时，下次启动时需要加--repair选项进行数据修复；修复运行中的数据库可通过
+		db.repairDatabase()或db.runCommand({"repairDatabase":1})来进行，修复期间，损坏的文件将被丢弃
+		a)可通过--master启动主服务器如：./mongod --dbpath ~/dbs/master --port 10000 --master
+		b)从服务器可这样启动：./mongod --dbpath ~/dbs/slave --port 10001 --slave --source 127.0.0.1:10000
+		其中--slave指明为从服务器，--source指明主服务器地址(也可以在从服务器启动后通过db.sources.insert(
+		{"host":"127.0.0.1:10000"}))，由于从服务器没有保存oplog，没法从从服务器中再启动下一级的从服务器，
+		从服务器数量不超过12个为好，当一个从服务器隶属多个主服务器时，各主服务器最好使用不同的命名空间
+
+《副本集》
+1.You can configure a secondary member for a specific purpose. You can configure a secondary to:
+	1)Prevent it from becoming a primary in an election, which allows it to reside in a secondary 
+		data center or to serve as a cold standby. See Priority 0 Replica Set Members (page 386).
+	2)Prevent applications from reading from it, which allows it to run applications that require 
+	separation from normal traffic. See Hidden Replica Set Members (page 387).
+	3)Keep a running “historical” snapshot for use in recovery from certain errors, such as 
+		unintentionally deleted databases. See Delayed Replica Set Members (page 388).
+2.The standard replica set deployment for production system is a three-member replica set. 
+	These sets provide redundancy and fault tolerance. Avoid complexity when possible, but 
+	let your application requirements dictate the architecture.
+	Important: If your application connects to more than one replica set, each set should 
+	have a distinct name. Some drivers group replica set connections by replica set name.
+3.Deploy an Odd Number of Members An odd number of members ensures that the replica set 
+	is always able to elect a primary. If you have an even number of members, add an arbiter 
+	to get an odd number. Arbiters do not store a copy of the data and require fewer resources. 
+	As a result, you may run an arbiter on an application server or other shared process.
+
+
+就是有自动故障恢复功能的主从集群，副本集没有固定的主节点，当一个主节点不能工作时会自动推举
+	其他节点做为新的主节点
+	1)给副本集取名dataset，查出主机名如为iwmgh.com
+	2)./mongod --dbpath ~/dbs/node1 --port 10001 --replSet dataset/iwmgh.com:10002 以--replSet选项启动一个
+		节点，并指明dataset副本集中在iwmgh:10002位置上还有一个同伴节点
+		以同样的方式启动另外一个节点：
+		./mongod --dbpath ~/dbs/node2 --port 10002 --replSet dataset/iwmgh.com:10001
+		./mongod --dbpath ~/dbs/node3 --port 10003 --replSet dataset/iwmgh.com:10001
+		副本集有自动检测功能，只要指定副本集中任意一个节点，其就会自动搜索并连接其余节点
+	3)连接任一节点进行初始化副本集，如:
+		db.runCommand({"replSetInitiate":{
+			"_id":"dataset",
+			"menbers":[{"_id":1,"host":"iwmgh:10001"},{"_id":2,"host":"iwmgh.com:10002"}]}
+		})
+		**再连接其他节点查询命名空间local.system.replset会发现配置会在各节点间传递
+		**副本集中的节点通过选举来决定由谁来做主节点(详细等研究...)
+		**对从节点进行读扩展，从节点默认是不响应请求的，可通过slaveOkay选项进行设置，对于读密集型的业务
+			这样扩展是很好的，对于写密集型的业务需要分片
+		**从节点也可以用--master启动从而能响应写操作
+		**主节点的所有改变数据的操作都记录在一个特殊的数据库叫local中，在oplog.$main集合里，oplog的每个文档
+			对应一个操作，oplog存储在固定集合中，可在服务器启动时用--oplogSize指定其大小，单位是M 默认oplog
+			大小是剩余磁盘空间的5%，由于oplog存于固定集合中，当从节点同步的速度远远落后于主节点的时候，就有
+			可能永远都跟不上了，因为oplog最老的数据会被最新的覆盖，当从节点跟不上同步时，复制就会停下；可以
+			用{"resync":1}命令或启动时加--autoresync选项进行重新同步，重新同步代价很大，最好是将oplog配置大点
+		**主从节点上都有一个local数据库，存放所有内部复制状态，主节点上在slaves集合中存放从节点的列表
+			从节点在me集合中存放从节点的唯一标识，在sources集合中存放源或节点的列表，主从节点都通过存放在
+			"syncedTo"里的时间戳来决定哪些操作需要执行或看是否已经跟不上同步了
+		**阻塞复制(待续...)
+		
+		**变更oplog的大小，a)停掉主节点，并删除local数据库:rm /data/db/local.*
+			b)用--oplogSize设置大小重新启动: ./mongod --master --oplogSize size
+			c)所有从节点加--autoresync选项重启
+		**复制的认证，主从节点都需要在local数据库中添加用户，每个节点的用户名和密码都是相同的，local数据库
+			中的用户和admin中的用户一样能读写整个服务器：use local;db.addUser("repl":password);
+	
+副本集维护：
+		1）主节点上可通过db.printReplicationInfo()查看复制状态信息
+		2）从节点上可通过db.printSlaveReplicationInfo()查看一些信息
+		3）主节点上可通过rs.add("mongodb3.duoyuan.com:30003")添加从节点
+		4）主节点上可通过rs.remove("mongodb3.duoyuan.com:30003")删除从节点
+		5）从节点上可通过rs.getMongo().slaveOk()设置节点可读
+	
+	
+	
+	
+	
+	
+	
+《分片(sharding)》
+	1.何时进行分片：
+		1)磁盘不够用了
+		2)单个mongod不能满足写数据性能需要了；
+		3)想将大量数据放在内存中提高性能；
+	2.开始分片：
+		1)启动配置服务器：      >mongod --port 20000 --dbpath ~/dbs/config 
+		2)启动mongos路由进程：  >mongos --port 30000 --configdb localhost:20000
+		3)添加片(即普通的mongod实例)
+			a)启动一个mongod实例：>mongod --port 10000 --dbpath ~/dbs/shard1 
+			b)连接mongos并加入片：>mongo localhost:30000/admin
+														>db.runCommand({addshard:"localhost:10000",allowLocal:true});
+
+	3.For redundancy, all production sharded clusters should deploy three config servers on three different
+		machines. Use a single config server only for testing deployments, never for production deployments. 
+		When you shift to production, upgrade immediately to three config servers.
+	4.The maxSize field in the shards (page 552) collection in the config database (page 547) sets the 
+		maximum size for a shard, allowing you to control whether the balancer will migrate chunks to a shard. 
+		If mapped size 9 is above a shard’s maxSize, the balancer will not move chunks to the shard. 
+		Also, the balancer will not move chunks off an overloaded shard. This must happen manually. 
+		The maxSize value only affects the balancer’s selection of destination shards.
+	5.In some situations, particularly when your data set grows slowly and a migration can impact performance, 
+		it’s useful to be able to ensure that the balancer is active only at certain times. 
+	6.Issue the following operation to disable the balancer: sh.setBalancerState(false)
+	7.Before starting a backup operation, confirm that the balancer is not active. You can use the following 
+		command to determine if the balancer is active: !sh.getBalancerState() && !sh.isBalancerRunning()
+	8.To remove a shard you must ensure the shard’s data is migrated to the remaining shards in the cluster. 
+		This procedure describes how to safely migrate data and how to remove a shard
+	9.To shard a collection using a hashed shard key, use an operation in the mongo that resembles the following:
+		sh.shardCollection( "records.active", { a: "hashed" } )
+	10.Warning: MongoDB hashed indexes truncate floating point numbers to 64-bit integers before hashing. 
+		For example, a hashed index would store the same value for a field that held a value of 2.3, 2.2, 
+		and 2.9. To prevent collisions, do not use a hashed index for floating point numbers that cannot 
+		be reliably converted to 64-bit integers (and then back to floating point). MongoDB hashed indexes 
+		do not support floating point values larger than 253.
+	11.Changing the chunk size affects when chunks split but there are some limitations to its effects.
+		1)Automatic splitting only occurs during inserts or updates. If you lower the chunk size, it may
+		 	take time for all chunks to split to the new size.
+		2)Splits cannot be “undone”. If you increase the chunk size, existing chunks must grow through 
+			inserts or updates until they reach the new size.
+		
+
+三个副本集分片
+mongo 192.168.0.6:30000
+rs.initiate({_id:"rs0",members:[{_id:0,host:"mongodb0.duoyuan.com:30000"}, {_id:1,host:"mongodb1.duoyuan.com:30001"},{_id:2,host:"mongodb2.duoyuan.com:30002"}]})
+mongo 192.168.0.6:30003
+rs.initiate({_id:"rs1",members:[{_id:3,host:"mongodb3.duoyuan.com:30003"}, {_id:4,host:"mongodb4.duoyuan.com:30004"},{_id:5,host:"mongodb5.duoyuan.com:30005"}]})
+mongo 192.168.0.6:30006
+rs.initiate({_id:"rs2",members:[{_id:6,host:"mongodb6.duoyuan.com:30006"}, {_id:7,host:"mongodb7.duoyuan.com:30007"},{_id:8,host:"mongodb8.duoyuan.com:30008"}]})
+
+mongos --port 29999 --configdb cfg0.duoyuan.com:30100,cfg1.duoyuan.com:30101,cfg2.duoyuan.com:30102
+mongo 192.168.0.6:29999
+sh.addShard( "rs0/mongodb0.duoyuan.com:30000" )
+sh.addShard( "rs1/mongodb3.duoyuan.com:30003" )
+sh.addShard( "rs2/mongodb6.duoyuan.com:30006" )
+sh.enableSharding("accounts")
+db.base.ensureIndex({name:"hashed"})
+sh.shardCollection("accounts.base", {name:"hashed"})
+for(var i=0; i<1000000000; i++){db.base.insert({name:"zxg"+i, sex:"male", age:30})}
+
+
+########################################################################
+对207407805条数据执行db.base_info.ensureIndex({name:"hashed"})
+磁盘：
+[root@DuoYuan mongodb_deployment]# du -sh sh*
+79G     sh0
+1.3G    sh1
+1.1G    sh2
+732M    sh_conf
+耗时：从9点15到10点左右
+[root@DuoYuan mongodb_deployment]# du -sh sh*
+93G     sh0
+1.3G    sh1
+1.1G    sh2
+842M    sh_conf
+其他：打开另一个连接到mongos执行show dbs和show collections等时阻塞不返回；
+以上操作完成后执行sh.shardCollection("accounts.base_info", {name:"hashed"})进行分片
+平衡器会一直在后台做数据块转移
+
+##########################################################################
+
+######################################## 分片专题 ################################
+《片键》
+1.MongoDb分片中的块可以细到只有一个片键的文档，亦即当一个数据集合某个片键有N个可能
+	值，就决定了对整个集合进行分片最多只能有N个数据块，最多只能有N个分片。
+2.分片后，mongodb不允许插入无片键的文档，也不允许通过$set命令
+	修改片键（修改的唯一方法是将片键对应的文档删除，然后更换片键再插入原文档）
+3.片键可以是混合类型，但mongodb会严格的先按类型如下排序，然后才类型内排序：
+	null<数字<字符串<对象<数组<二进制数据<ObjectId<布尔值<日期<正则表达式
+4.mongodb分片中的块是个逻辑概念，而非物理实现，即一个块并非连续存储在磁盘上或以任何
+	形式聚集在一起；块大小设置在200M左右是兼顾可移动性和最小开销的最佳选择（块大小可
+	在mongos启动时通过--chunkSize指定）
+5.mongodb平衡器会自动将分片内的数据块在各可用的分片间进行数据块平衡移动，平衡移动的
+	代价非常高，一个分片的数据块数量必须比块最少的分片多出至少9个块后才触发一轮平衡移动
+6.片键一般选择：{coarseLocatlity:1, search:1}其中coarseLocatlity用来控制数据的局部性，
+	search用于搜索数据，
+
+
+
+一个集群的基本构造：
+1.《mongos进程》
+	1)mongos进程隐藏了分片内部实现的复杂性，使用集群时，应该连接一个mongos并向其发送所
+		有的读写请求，当请求是包含有片键时，mongos就会将请求分发到恰当的分片上去；当请求
+		不包含片键时，mongso会将请求发到所有分片上去
+	2)mongos进程通常运行在应用程序服务器上（即直接与应用程序连接），一般一个产品对应一
+		个mongos就基本可以了，例如北京，深圳和新疆分别有bj_01,sz_01和xj_01三个主机上运行
+		配置服务器mongod，可以在这3个中的任一个主机或另外在美国架设单独的一个主机上运行
+		mongos ：./mongos --configdb bj_01,sz_01,xj_01这样位于3地的配置服务器就可以通过
+		mongos集成起来了，至此只是将配置服务器集成了，还不能保存数据（配置服务器只保存
+		配置信息，数据是要保存在分片上的，需要添加分片后才可以,见<分片服务器>）应用程序
+		可通过只访问mongos，最终的读写请求会被分发到3个不同的配置服务器上，再由配置服务
+		器分配到分片上完成最终的读写操作
+2.《配置服务器》
+	1)集群配置信息保存在一组专门的mongod上，它们被称做‘配置服务器’，集群分片数据能成功
+		迁移或修改集群配置信息，必须保证所有的配置服务器在线。配置服务器是很轻量级的，可
+		以运行在集群中的任何服务器上
+	2)配置服务器，官方推荐使用3个，且应该分布在不同的故障域里（例如北京，深圳和新疆分别
+		有bj_01,sz_01和xj_01三个主机），只要在这3个地方分别启动一个mongod（即配置服务器）
+3.《分片服务器》
+	1)是存储实际数据的服务器，每个分片由1台或多台(称副本集)机器组成，通常应该使用副本集
+		（副本集名称就是分片名称），分片服务器也是一个mongod，设置分片的方法：
+
+集群的使用问题：
+1.CAP原则应验(见附1)：存在过时数据，即数据不是实时的。
+	1)如查询count时，mongos会将count命令发送到所有分片上计算
+		然后各分片把结果发到mongos上，mongos将其加和返回给应用程序，当count请求正好发生
+		在mongodb做数据块迁移时，就会出现问题，mongodb做数据块迁移时，是先把数据块成功
+		迁移到目的分片上后，才删除原分片上的数据，这样就会造成count命令在两个分片上做了
+		重复的统计计算
+	2)唯一索引，除片键外，要在整个集群中做到索引唯一，只能在每次写操作时将整个集群锁
+		住，但成本太高；当然是可以创建以片键开头的组合唯一索引。
+	3)更新操作，没有什么好办法能保证更新操作在多个分片间只发生一次，
+	4)MapReduce....
+	
+集群的管理：
+1.db.printSardingStatus()收集显示所有与集群有关的信息
+2.连接mongos查看集群的配置信息：
+	>use config
+	>db.mongos.find()显示所有mongos进程列表，包括过去的和现在的
+	>db.shards集群中的所有分片
+	>db.databases集群中的所有数据库(包括分片的和未分片的)
+	>db.collections集群中所有分片集合
+	>db.chunks集群中的所有数据块
+	>db.settings包括数据库相关的可调设置，如设置数据块大小、平衡器的开关等
+	>db.changelog集群变化的日志，如记录集群每次分割和迁移
+3.集群的运维中，所有正常的操作都应该通过mongos来完成
+4.在mongos上运行mongostat --discover分析出集群的所有成员和状态
+5.如果使用副本集，请使用--rest选项启动它们，可通过localhost:28017/_replSet进入副
+	本集的Web管理界面
+6.备份：在运行的集群中做备份非常有难度，通常只做某个分片的备份和恢复。如果要做整个
+	集群的备份，需要关闭平衡器，fsync锁住集群中的所有从机，然后转储数据
+7.架构建议：
+8.错误处理
+	1)如果分片整个停机了，所有命中该分片读写请求都会返回错误，应用程序应该能处理
+		这类错误
+	2)如果配置服务器停机了，就尽快让它恢复正常，因为只要一个配置服务器挂了，其他所有
+		与配置相关的修改都无法进行，如不能添加mongos服务器，不能迁移数据块，不能添加
+		或删除数据库或集合
+	3)如果mongos挂了，就启动多个备用的mongos.....
+	
+
+
+Mongodb应用案例和技巧：
+1.如果数据需要在未来很长时间都能适用，应范式化
+2.应该尽可能地做到客户端的一次读请求的所有数据，只查询一个集合
+3.文档中不要嵌入不断增大的数据
+4.对于知道某个字段一定会用到固定大小的空间时，在第一次插入文档时就要为其分配足够
+5.文档应该自给自足，所有的计算都应该在客户端完成
+6.应尽量避免使用$where子句，其效率很低，$where子句其实对应一个个java函数，当使用
+	$where子句时，mongodb需要将BSON格式的文档转换成java对象才能处理
+7.不要用GridFS来存储小的文档，GridFS是用来存储大文件的，至少也应该是一个文档存放
+	不下的数据，那些可以做为数据流传递给客户端的数据非常适合用GridFS。
+8.索引要只用在那些查询结果只是整个集合中的一小部分数据的查询，当要返回集合中一半
+	以上的文档时，不要使用索引
+9.分级文档可以在没有索引的时候查询避免全盘遍历
+10.AND型查询和OR型查询的优化，AND型的将集合中少数能满足的条件放在前面，OR型的相反
+11.用--journal打开日志，在服务器挂掉的时候可以从日志中恢复数据
+12.repare修复能力是有限的，推荐的做法是从备份中快速恢复，或从头开始同步
+13.
+
+
+
+
+
+
+
+附1：分布式领域CAP理论，
+Consistency(一致性)：集群中一个节点上的数据变化，其他点上的对应数据是否也一致变化
+Availability(可用性)：在集群中一部分节点故障后，集群是否还能响应客户端的读写请求
+Partition tolerance(分区容错性)：集群中某些节点无法联系后，集群是否还能继续进行服务
+定理：任何分布式系统只可同时满足以上二点，没法三者兼顾。
+由于当前的网络硬件肯定会出现延迟丢包等问题，所以分区容忍性是我们必须需要实现的。
+所以我们只能在一致性和可用性之间进行权衡，mongodb选择了可用性，意味着放弃了数据一致性
+
+
+
+
+

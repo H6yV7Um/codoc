@@ -1,0 +1,18 @@
+﻿一、react native环境配置
+1.安装nodejs
+	https://nodejs.org/en/download/
+
+2.安装python
+	https://www.python.org/downloads/
+	不知道为什么wind7只有32位的
+
+3.安装android studio
+	http://www.androiddevtools.cn/
+
+4.npm是nodejs自带的工具，用其进行react native的安装
+	npm install -g react-native-cli
+
+5.运行测试
+	react-native init AwesomeProject
+	cd AwesomeProject
+	react-native run-android

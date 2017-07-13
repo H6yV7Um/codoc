@@ -1,0 +1,14 @@
+﻿1.E:\work\website_trunk\config\toggle_var_config.php
+  修改apple_review_ver为苹果审核中的版本号，审核完后再将其改为下一个版本号
+
+
+2.在下列文件中添加新版本号
+E:\work\website\db\account_db.php
+$AddLevelId , $AwardId
+
+E:\work\website\admin_tool\user_tool\auth_control.php
+E:\work\website\user_assistant\auth_control.php
+award_map , priv_lvl_map
+
+E:\work\website\db\admin_user_db.php
+AdminGetUserFeedback

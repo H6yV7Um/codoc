@@ -1,0 +1,14 @@
+﻿1.备份
+svnadmin dump /svnRepository | gzip > repository-backup.gz
+或不压缩
+svnadmin dump /svnRepository > repository-backup.svn
+
+2.恢复
+  1）建立新库
+     mkdir /svnNewRepository && svnadmin create /svnNewRepository
+  2）导入数据
+     zcat repository-backup.gz | svnadmin load /svnNewRepository
+     或不压缩
+     svnadmin load /svnNewRepository < repository-backup.svn
+3.恢复用户信息
+  拷贝passwd，authz和svnserve.conf到新的库中

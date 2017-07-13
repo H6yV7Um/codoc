@@ -1,0 +1,30 @@
+﻿注:版本>=5.1.29
+若用以前的配置方法会提示错误的...什么5.1.29开始用slow_query_log来代替之前的命令来什么的云云...好奇的话自己试试咯,嘿
+slow_query_log=1
+slow_query_log_file = /var/log/mysql/mysql-slow.log
+long_query_time = 2
+log-queries-not-using-indexes
+
+slow_query_log  表示开启慢速查询日志
+slow_query_log_file  日志路径
+long_query_time 命令耗时大于2秒的记录.
+改完重启mysql,然后放个1,2天...里面应该会有慢速查询的日志了...
+
+分析的时候可以用官方自带的mysqldumpslow .
+使用方法可以用mysqldumpslow --help来查询.
+
+介绍简单比较实际的参数:
+1.  -s，是order的顺序，有c,t,l,r和ac,at,al,ar，
+     分别是按照query次数，时间，lock的时间和返回的记录数来排序，前面加了a的表平均值
+2.  -t，是top n的意思，想想limit n 的意思就知道了
+-g，后边可以写一个正则匹配模式，大小写不敏感
+
+实例1:
+mysqldumpslow -s c -t 10 slow.log
+mysqldumpslow -s r -t 10 slow.log
+后面slow.log是你的日志文件名.
+两个查询分别按命令使用次数和返回记录数返回前10条.
+
+实例2:
+mysqldumpslow -t 10 -s t -g “left join” slow.log
+返回日志中带有左连接left join的语句.

@@ -1,0 +1,4 @@
+﻿查哪个进程使用了端口8000，从而得到进程号
+netstat -aon|findstr 8000
+查进程号7780对应的运行程序名字
+tasklist|findstr "7780"

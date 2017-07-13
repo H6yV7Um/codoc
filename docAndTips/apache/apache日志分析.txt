@@ -1,0 +1,53 @@
+﻿pache访问日志例子(每个域用空格分开)：
+27.46.123.13 - - [03/Nov/2013:23:59:02 +0800] "GET /studytool.apk HTTP/1.1" 206 2235756
+$1: 27.46.123.13
+$2: -
+$3: -
+$4: [03/Nov/2013:23:59:02 
+$5：+0800]
+$6: "GET 
+$7：/studytool.apk 
+$8：HTTP/1.1"
+$9: 206 
+$10: 2235756
+
+【不同的IP连接总数】
+cat access_log_* | awk '{print $1}' | sort | uniq -c | sort -nr|wc -l
+【多少个不同IP访问了admin_tool目录】
+cat access_log_* | grep 'admin_tool' |awk '{print $1}' | sort | uniq -c | sort -nr
+【61.135.166.230访问了哪些文件】
+cat access_log_* | grep "61.135.166.230" | awk '{print $7}' | sort | uniq -c | sort -nr | head -n 10
+【访问次数最多的前10个文件】
+cat access_log_*| awk '{print $7}' | sort | uniq -c | sort -nr | head -n 10
+【2013年7点到8点时间段内的不同ip连接数】
+cat access_log_* |grep "2013:0[7-8]"| awk '{print $1}' | sort | uniq -c| sort -nr | wc -l
+【访问次数最多的前10个IP】
+cat access_log_* |cut -d ' ' -f 1 |sort |uniq -c | sort -nr | awk '{print $0 }' | head -n 10
+【被访问超过100次的文件】
+cat access_log_* | cut -d ' ' -f 7 | sort |uniq -c | awk '{if ($1 > 100) print $0}' |sort -nr
+【访问次数超过100次的IP】
+cat access_log |cut -d ' ' -f 1 |sort |uniq -c | awk '{if ($1 > 100) print $0}'| sort -nr 
+【访问次数最多的几个分钟(找到热点)】
+cat access_log_*|awk '{print $4}'|cut -c 14-18|sort|uniq -c|sort -nr|head -30
+
+
+【查看apache进程】
+ps aux|grep httpd|grep -v grep|wc -l 
+ 
+查看80端口的tcp连接:
+netstat -tan | grep "ESTABLISHED" | grep ":80" | wc -l
+ 
+用tcpdump嗅探80端口的访问看看谁最高
+tcpdump -i eth0 -tnn dst port 80 -c 1000 | awk -F"." '{print $1"."$2"."$3"."$4}' | sort | uniq -c | sort -nr
+
+当前WEB服务器中联接次数最多的20条ip地址:
+netstat -ntu |awk '{print $5}' |sort | uniq -c| sort -nr | head -n 20
+ 
+  
+列出传输时间超过 30 秒的文件
+cat access_log|awk '($NF > 30){print $7}'|sort -n|uniq -c|sort -nr|head -20
+ 
+列出最最耗时的页面(超过60秒的)的以及对应页面发生次数
+cat access_log |awk '($NF > 60 && $7~/\.php/){print $7}'|sort -n|uniq -c|sort -nr|head -100
+
+

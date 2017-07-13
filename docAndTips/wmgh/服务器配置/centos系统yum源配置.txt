@@ -1,0 +1,62 @@
+﻿配置yum更新源
+
+创建/etc/yum.repos.d/CentOS-Base.repo文件，定义yum更新源，这里使用的是上海交大的CentOS更新源
+
+
+[root@linux-a ~]# vim /etc/yum.repos.d/CentOS-Base.repo
+
+[base]
+name=CentOS-5-Base
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever5&arch=$basearch&repo=os
+#baseurl=http://mirror.centos.org/centos/$releasever/os/$basearch/
+baseurl=http://ftp.sjtu.edu.cn/centos/5/os/$basearch/
+gpgcheck=0
+gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-centos5
+#released updates
+[update]
+name=CentOS-5-Updates
+#mirrorlist=http://mirrorlist.centos.org/?release=4&arch=$basearch&repo=updates
+baseurl=http://ftp.sjtu.edu.cn/centos/5/updates/$basearch/
+gpgcheck=0
+gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-centos5
+#packages used/produced in the build but not released
+[addons]
+name=CentOS-5-Addons
+#mirrorlist=http://mirrorlist.centos.org/?release=4&arch=$basearch&repo=addons
+baseurl=http://ftp.sjtu.edu.cn/centos/5/addons/$basearch/
+gpgcheck=0
+gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-centos5
+#additional packages that may be useful
+[extras]
+name=CentOS-5-Extras
+#mirrorlist=http://mirrorlist.centos.org/?release=4&arch=$basearch&repo=extras
+baseurl=http://ftp.sjtu.edu.cn/centos/5/extras/$basearch/
+gpgcheck=0
+gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-centos5
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-5-Plus
+#mirrorlist=http://mirrorlist.centos.org/?release=4&arch=$basearch&repo=centosplus
+baseurl=http://ftp.sjtu.edu.cn/centos/5/centosplus/$basearch/
+gpgcheck=0
+enabled=0
+gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-centos5
+#contrib - packages by Centos Users
+[contrib]
+name=CentOS-5-Contrib
+#mirrorlist=http://mirrorlist.centos.org/?release=4&arch=$basearch&repo=contrib
+baseurl=http://ftp.sjtu.edu.cn/centos/5/contrib/$basearch/
+gpgcheck=0
+enabled=0
+gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-centos5
+# vi dag.repo
+[dag]
+name=Dag RPM Repository for RHEL5
+baseurl=http://ftp.riken.jp/Linux/dag/redhat/el5/en/$basearch/dag/
+enabled=1
+gpgcheck=0
+gpgkey=http://ftp.riken.jp/Linux/dag/packages/RPM-GPG-KEY.dag.txt
+
+导入key
+
+[root@linux-a ~]# rpm --import http://ftp.sjtu.edu.cn/centos/5/os/i386/RPM-GPG-KEY-CentOS-5

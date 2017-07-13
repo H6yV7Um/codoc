@@ -1,0 +1,77 @@
+﻿转到apache/bin目录下,输入:
+htpasswd -cmb pw_file abc 123456
+即可在当前目录下生成密码文件pw_file, 且用户名为abc,密码为123456(加密的),
+设置httpd.conf文件以控制目录
+
+
+
+或依此步骤生成
+
+E:/web/Apache2/bin>htpasswd -c userpass user1
+Automatically using MD5 format.
+New password: ******
+Re-type new password: ******
+Adding password for user user1
+
+更新密码:
+E:/web/Apache2/bin>htpasswd userpass user1
+Automatically using MD5 format.
+New password: ******
+Re-type new password: ******
+Updating password for user user1
+
+添加新用户:
+E:/web/Apache2/bin>htpasswd userpass user2
+Automatically using MD5 format.
+New password: ******
+Re-type new password: ******
+Updating password for user user2
+
+打开文件userpass,可以看到有两条记录:
+user1:$apr1$Rr......$lHobT0z67Sp8heUkS0B.b0
+user2:$apr1$Px......$XQWTfGNlfVBgEvQKBK8gt1
+
+删除用户:
+htpasswd -D userpass user1
+Automatically using MD5 format
+Deleting password for user user1
+打开文件userpass,可以看到有只一条记录了:
+user2:$apr1$Px......$XQWTfGNlfVBgEvQKBK8gt1
+
+ 
+
+当然你也可以用些指令生成.htaccess
+E:/web/Apache2/bin>htpasswd -c .htaccess user
+Automatically using MD5 format.
+New password: ******
+Re-type new password: ******
+Adding password for user user
+
+选项:
+
+ -c  创建新的文件
+ -m  用md5方式加密密码
+ -b  在命令行上输入密码
+
+Usage:
+        htpasswd [-cmdpsD] passwordfile username
+        htpasswd -b[cmdpsD] passwordfile username password
+
+        htpasswd -n[mdps] username
+        htpasswd -nb[mdps] username password
+ -c  Create a new file.
+ -n  Don't update file; display results on stdout.
+ -m  Force MD5 encryption of the password (default).
+ -d  Force CRYPT encryption of the password.
+ -p  Do not encrypt the password (plaintext).
+ -s  Force SHA encryption of the password.
+ -b  Use the password from the command line rather than prompting for it.
+ -D  Delete the specified user.
+On Windows, NetWare and TPF systems the '-m' flag is used by default.
+On all other systems, the '-p' flag will probably not work.
+
+E:/web/Apache2/bin>htpasswd -mb user abc 123456
+htpasswd: cannot modify file user; use '-c' to create it
+
+E:/web/Apache2/bin>htpasswd -cmb user abc 123456
+Adding password for user abc

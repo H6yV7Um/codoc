@@ -1,0 +1,13 @@
+﻿
+
+1.设置ftp的默认根目录，如不设置，用户的主目录为默认根目录
+local_root=/alidata/data_backup/mysql
+anon_root=/alidata/data_backup/mysql
+
+组合1:锁定所有人在根目录/alidata/data_backup/mysql上，且不能切换到其他目录
+chroot_local_user=YES
+chroot_list_enable=NO
+
+组合2:锁定chroot_list上的用户在根目录/alidata/data_backup/mysql上，且不能切换到其他目录
+chroot_local_user=YES
+chroot_list_enable=NO

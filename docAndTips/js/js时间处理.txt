@@ -1,0 +1,102 @@
+﻿JS时间大全Date (对象) 
+
+　　Date 对象能够使你获得相对于国际标准时间（格林威治标准时间，现在被称为 UTC-Universal Coordinated Time）或者是 Flash 播放器正运行的操作系统的时间和日期。要使用Date对象的方法，你就必须先创建一个Date对象的实体（Instance）。
+　　Date 对象必须使用 Flash 5 或以后版本的播放器。
+　　Date 对象的方法并不是静态的，但是在使用时却可以应用于所指定的单独实体。
+　　Date 对象的方法简介：
+　　·getDate　　　　　　｜　根据本地时间获取当前日期(本月的几号)
+　　·getDay　　 　　　　｜　根据本地时间获取今天是星期几(0-Sunday,1-Monday...)
+　　·getFullYear　　　　｜　根据本地时间获取当前年份(四位数字) 
+　　·getHours　　 　　　｜　根据本地时间获取当前小时数(24小时制,0-23)
+　　·getMilliseconds　　｜　根据本地时间获取当前毫秒数
+　　·getMinutes　　　 　｜　根据本地时间获取当前分钟数
+　　·getMonth　　　　 　｜　根据本地时间获取当前月份(注意从0开始:0-Jan,1-Feb...)
+　　·getSeconds　　　 　｜　根据本地时间获取当前秒数
+　　·getTime　　　　　　｜　获取UTC格式的从1970.1.1 0:00以来的毫秒数
+　　·getTimezoneOffset　｜　获取当前时间和UTC格式的偏移值(以分钟为单位)
+　　·getUTCDate　　　　 ｜　获取UTC格式的当前日期(本月的几号)
+　　·getUTCDay　　　　　｜　获取UTC格式的今天是星期几(0-Sunday,1-Monday...)
+　　·getUTCFullYear　　 ｜　获取UTC格式的当前年份(四位数字)
+　　·getUTCHours　　　　｜　获取UTC格式的当前小时数(24小时制,0-23)
+　　·getUTCMilliseconds ｜　获取UTC格式的当前毫秒数
+　　·getUTCMinutes　　　｜　获取UTC格式的当前分钟数
+　　·getUTCMonth　　　　｜　获取UTC格式的当前月份(注意从0开始:0-Jan,1-Feb...)
+　　·getUTCSeconds　　　｜　获取UTC格式的当前秒数
+　　·getYear　　　　　　｜　根据本地时间获取当前缩写年份(当前年份减去1900)
+　　·setDate　　　　　　｜　设置当前日期(本月的几号)
+　　·setFullYear　　　　｜　设置当前年份(四位数字)
+　　·setHours　　　　　 ｜　设置当前小时数(24小时制,0-23)
+　　·setMilliseconds　　｜　设置当前毫秒数
+　　·setMinutes　　　　 ｜　设置当前分钟数
+　　·setMonth　　　　　 ｜　设置当前月份(注意从0开始:0-Jan,1-Feb...)
+　　·setSeconds　　　　 ｜　设置当前秒数
+　　·setTime　　　　　　｜　设置UTC格式的从1970.1.1 0:00以来的毫秒数
+　　·setUTCDate　　　　 ｜　设置UTC格式的当前日期(本月的几号)
+　　·setUTCFullYear　　 ｜　设置UTC格式的当前年份(四位数字)
+　　·setUTCHours　　　　｜　设置UTC格式的当前小时数(24小时制,0-23)
+　　·setUTCMilliseconds ｜　设置UTC格式的当前毫秒数
+　　·setUTCMinutes　　　｜　设置UTC格式的当前分钟数
+　　·setUTCMonth　　　　｜　设置UTC格式的当前月份(注意从0开始:0-Jan,1-Feb...)
+　　·setUTCSeconds　　　｜　设置UTC格式的当前秒数
+　　·setYear　　　　　　｜　设置当前缩写年份(当前年份减去1900)
+　　·toString　　　　　 ｜　将日期时间值转换成"日期/时间"形式的字符串值
+　　·Date.UTC　　　　　 ｜　返回指定的UTC格式日期时间的固定时间值
+
+创建新的 Date 对象
+
+　　语法：
+　　　new Date();
+　　　new Date(year [, month [, date [, hour [, minute [, second [, millisecond ]]]]]] );
+　　参数：
+　　　year 　　　　是一个 0 到 99 之间的整数，对应于 1900 到 1999 年，或者为四位数字指定确定的年份；
+　　　month　　　　是一个 0 (一月) 到 11 (十二月) 之间的整数，这个参数是可选的；
+　　　date　 　　　是一个 1 到 31 之间的整数，这个参数是可选的；
+　　　hour 　　　　是一个 0 (0:00am) 到 23 (11:00pm) 之间的整数，这个参数是可选的； 
+　　　minute 　　　是一个 0 到 59 之间的整数，这个参数是可选的；
+　　　second 　　　是一个 0 到 59 之间的整数，这个参数是可选的；
+　　　millisecond　是一个 0 到 999 之间的整数，这个参数是可选的；
+　　注释： 
+　　　对象。新建一个 Date 对象。
+　　播放器支持：
+　　　Flash 5 或以后的版本。
+　　例子：
+　　　下面是获得当前日期和时间的例子：
+　　　　now = new Date();
+　　　下面创建一个关于国庆节的 Date 对象的例子：
+　　　　national_day = new Date (49, 10, 1); 
+
+
+　　　下面是新建一个 Date 对象后，利用 Date 对象的 getMonth、getDate、和 getFullYear方法获取时间，然后在动态文本框中输出的例子。
+　　　　myDate = new Date();
+　　　　dateTextField = (mydate.getMonth() + "/" + myDate.getDate() + "/" + mydate.getFullYear());
+Date > Date.getDate 
+Date.getDate
+　　语法：myDate.getDate();
+　　参数：无
+　　注释：
+　　　方法。根据本地时间获取当前日期(本月的几号)，返回值是 1 到 31 之间的一个整数。
+　　播放器支持：Flash 5 或以后版本。
+Date > Date.getDay 
+Date.getDay
+　　语法：myDate.getDay();
+　　参数：无
+　　注释：
+　　　方法。根据本地时间获取今天是星期几(0-星期日，1-星期一...)。本地时间由 Flash 播放器所运行的操作系统决定。
+　　播放器支持：Flash 5 或以后版本。
+Date > Date.getFullYear 
+Date.getFullYear
+　　语法：myDate.getFullYear();
+　　参数：无
+　　注释：
+　　　方法。根据本地时间获取当前年份(四位数字，例如 2000)。本地时间由 Flash 播放器所运行的操作系统决定。
+　　播放器支持：Flash 5 或以后版本。
+　　例子：
+　　　下面的例子新建了一个 Date 对象，然后在输出窗口输出用 getFullYear 方法获得的年份：
+　　　myDate = new Date();
+　　　trace(myDate.getFullYear());
+Date > Date.getHours 
+Date.getHours
+　　语法：myDate.getHours();
+　　参数：无
+　　注释：
+　　　方法。根据本地时间获取当前小时数(24小时制，返回值为0-23之间的整数)。本地时间由 Flash 播放器所运行的操作系统决定。

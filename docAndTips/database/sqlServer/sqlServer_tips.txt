@@ -1,0 +1,2 @@
+php连接sqlserver特别慢，需要用超级管理权限运行： 
+	netsh interface tcp set global rss=disabled autotuninglevel=disabled

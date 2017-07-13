@@ -1,0 +1,2 @@
+﻿1. serialize会把数据类型记录，而json_encode则只是存成字符串的键值对
+2. 门户网站一般把session存在在memcache中

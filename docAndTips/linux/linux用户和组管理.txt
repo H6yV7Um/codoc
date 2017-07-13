@@ -1,0 +1,98 @@
+﻿【用户管理】
+一、配置文件：
+【/etc/passwd】用户的配置文件(user_name:pw:uId:gId:spec_info:home_dir:login_shell)
+【/etc/shadow】用户影子口令文件(如root:$6$RsKl0MirT5j8YldZ$4W715c23nRX/omMnJpmSenWdcc7iB5DVT3R3cDfE2AOnRmP5jUr59Sj0GO4tPYI8E1Y08nAoeeB8gzSpkjOtT/:16029:0:99999:7:::)
+    第一字段：用户账号名称。
+    第二字段：使用MD5加密的密码字串信息，当为“*”或“!!”时表示此用户不能登录到系统。
+		  若该字段内容为空，则该用户无需密码即可登录系统。
+    第三字段：上次修改密码的时间，表示从1970年01月01日算起到最近一次修改密码时间隔的
+		  天数。
+    第四字段：密码最短有效天数，自本次修改密码后，必须至少经过该天数才能再次修改密码。
+		  默认值为0，表示不进行限制。
+    第五字段：密码最长有效天数，自本次修改密码后，经过该天数以后必须再次修改密码。
+		  默认值为99999，表示不进行限制。
+    第六字段：提前多少天警告用户口令将过期，默认值7。
+    第七字段：在密码过期之后多少天内禁用此用户。
+    第八字段：账号失效时间，此字段指定了用户作废的天数（从1970年01月01日起计算），
+		  默认值为空，表示账号永久可用。
+    第九字段：保留字段，目前没有特定用途。
+
+二、查询信息
+【who】显示目前所有登陆系统的用户
+【whoami】显示自身的用户名称
+【w】显示目前登入系统的用户有那些人，以及他们正在执行的程序。单独执行w
+         指令会显示所有的用户，您也可指定用户名称，仅显示某位用户的相关信息。
+
+三、用户操作
+【adduser/useradd zxg】新建zxg用户
+【passwd zxg】给zxg用户设置密码
+【usermod -G wmgh zxg】将已有用户zxg加入wmgh组
+【useradd zxg -s /sbin/nologin -d /home/zxg】创建zxg用户指定其主目录为/home/zxg；-s /sbin/nologin说明此用户不能登陆
+【useradd autoget -M】创建autoget用户且不为其创建主目录
+【userdel zxg】删除zxg用户
+【userdel -r zxg】删除zxg用户，同时会将与该用户的目录删除如其主目录
+【passwd -l zxg】将zxg用户锁住使其不能登陆（实际上是在/etc/shadow文件中属于该用户行的第二个字段（密码）做修改，如加个字符之类的）
+【passwd -u zxg】将zxg用户从锁住状态解锁（实际上是在/etc/shadow文件中属于该用户行的第二个字段（密码）做恢复到-l修改前的状态）
+【chmod -R 775 patch】将patch目录及内部所有文件和目录改权限为775
+
+四、其他
+【pwcov】同步用户从/etc/passwd 到/etc/shadow 
+【pwunconv】是pwcov的逆操作，从/etc/shadow和/etc/passwd创建/etc/passwd后删除/etc/shadow
+【pwck】校验用户配置文件/etc/passwd和/etc/shadow文件内容是否合法完整
+【id】查看用户的UID、GID及所归属的用户组
+【chfn】更改用户信息（名字，办公室，联系电话）
+【su】用户切换工具
+【sudo】通过另一个用户来执行命令，su切换用户，然后通过切换到的用户来完成相应的任务；如通过配置/etc/sudoers可使普通用户不需要密码就能执行root权限级别的命令
+【skel目录】/etc/skel是存放用户启动文件的目录，当我们通过useradd或adduser添加新用户时，这个目录下的文件会被系统复制到新用户的主目录下；我们可通过修改、添加、删除/etc/skel目录下的文件，来为用户提供一个统一、标准的、默认的用户环境；如果我们是通过修改/etc/passwd来添加新用户时，就需要把/etc/skel下的文件都复制到用户的主目录下并用chown改变属主
+【 /etc/default/useradd 】通过useradd添加用户时的规则文件：
+	HOME 指定把用户的主目录建在哪里；
+	INACTIVE 是否启用帐号过期停权，-1表示不启用；
+	EXPIRE 指定帐号终止日期，不设置表示不启用；
+	SHELL 指定使用哪个SHELL；
+	SKEL 指定添加新用户时主目录中的默认启动文件存放位置；也就是说，当我们用adduser添加
+	     用户时，用户主目录下的文件都是从这个目录中复制过去的； 
+【 /etc/login.defs】 创建用户时的一些规划文件：
+	MAIL_DIR 创建用户时指定在哪个目录中创建用户的mail文件；
+	PASS_MAX_DAYS   用户的一个密码最多能用的天数；
+	PASS_MIN_DAYS   下次密码修改时间间隔最小天数；
+	PASS_MIN_LEN    密码最小长度；
+	PASS_WARN_AGE   提前多少天提醒密码到期
+	UID_MIN         添加用户时，UID的最小值；
+	UID_MAX         添加用户时，UID的最大值；
+	GID_MIN         添加用户时，GID 的最小值；
+	GID_MAX         添加用户时，GID 的最大值；
+	CREATE_HOME     添加用户时，是否创用户主目录；
+
+
+
+
+
+
+
+
+【组管理】
+一、配置文件：
+【/etc/group】用户组配置文件（group_name:passwd:GID:user_list）；
+【/etc/gshadow】用户组的影子文件(group_name:passwd:GID:user_list)
+
+二、查询信息
+【groups】查看当前登录用户在哪些组里
+【groups wmgh】查看wmgh用户在哪些组里
+
+三、组操作
+【groupadd wmgh】新建wmgh组
+【gpasswd -a zxg wmgh】将zxg用户加入wmgh组
+***********【普通用户加入root组后将无法继承root的权限】**********
+【gpasswd -d zxg wmgh】将zxg用户从wmgh组中删除
+【groupdel wmgh】删除wmgh组
+【groupmod -n wmgh_team wmgh】将wmgh组名改为wmgh_team
+【chgrp -R httpd_grp patch】将patch目录及内部所有文件和目录改属为httpd_grp组
+
+四、其他
+【grpconv】通过/etc/group和/etc/gshadow同步（不存在则创建）到/etc/gshadow 
+【grpunconv】通过/etc/group和/etc/gshadow文件内容来同步或创建/etc/group，然后删除gshadow
+
+
+
+
+#####################################################################################

@@ -1,0 +1,199 @@
+
+mysql多实例的配置和管理:
+mysql实例数：3个
+实例占用端口分别为：3307、3308、3309
+
+1.创建mysql用户
+2.编译安装mysql
+3.初始化数据库(basedir是mysql的安装路径,主要是安装基本的管理数据库如test和mysql)
+	mysql_install_db --basedir=/usr --datadir=/test/mysql_multi/wmgh --user=mysql
+	mysql_install_db --basedir=/usr --datadir=/test/mysql_multi/studymate --user=mysql
+	mysql_install_db --basedir=/usr --datadir=/test/mysql_multi/auth --user=mysql
+	mysql_install_db --basedir=/usr --datadir=/test/mysql_multi/gtd --user=mysql
+
+4.配置my.cnf如下
+[mysqld_multi]
+mysqld = /usr/bin/mysqld_safe
+mysqladmin = /usr/bin/mysqladmin
+user = admin
+password = duoyuan
+log = /test/mysql_multi/mysqld_multi.log
+
+[mysqld1]
+socket = /test/mysql_multi/wmgh/mysql.sock
+port = 3306
+pid-file = /test/mysql_multi/wmgh/3306.pid
+datadir=/test/mysql_multi/wmgh
+user = mysql
+init_connect='SET NAMES utf8'
+
+skip-name-resolve
+back_log = 500
+max_connections = 2000
+max_connect_errors = 9999999
+table_open_cache = 512
+max_allowed_packet = 16M
+binlog_cache_size = 1M
+max_heap_table_size = 64M
+sort_buffer_size = 8M
+join_buffer_size = 8M
+thread_cache_size = 4
+thread_concurrency = 4
+query_cache_size =128M
+query_cache_limit = 2M
+default-storage-engine = myisam
+thread_stack = 192K
+transaction_isolation = READ-COMMITTED
+tmp_table_size = 64M
+log-bin=mysql-bin
+binlog_format=mixed
+slow_query_log=1
+long_query_time =3
+
+# *** myisam Specific options ***
+key_buffer_size = 256M
+read_buffer_size = 2M
+read_rnd_buffer_size = 16M
+bulk_insert_buffer_size = 64M
+myisam_sort_buffer_size = 128M
+myisam_max_sort_file_size = 10G
+myisam_repair_threads = 1
+myisam_recover
+
+[mysqld2]
+socket = /test/mysql_multi/studymate/mysql.sock
+port = 3307
+pid-file = /test/mysql_multi/studymate/3307.pid
+datadir = /test/mysql_multi/studymate
+user = mysql
+init_connect='SET NAMES utf8'
+
+skip-name-resolve
+back_log = 500
+max_connections = 2000
+max_connect_errors = 9999999
+table_open_cache = 512
+max_allowed_packet = 16M
+binlog_cache_size = 1M
+max_heap_table_size = 64M
+sort_buffer_size = 8M
+join_buffer_size = 8M
+thread_cache_size = 4
+thread_concurrency = 4
+query_cache_size =128M
+query_cache_limit = 2M
+default-storage-engine = myisam
+thread_stack = 192K
+transaction_isolation = READ-COMMITTED
+tmp_table_size = 64M
+log-bin=mysql-bin
+binlog_format=mixed
+slow_query_log=1
+long_query_time =3
+
+# *** myisam Specific options ***
+key_buffer_size = 256M
+read_buffer_size = 2M
+read_rnd_buffer_size = 16M
+bulk_insert_buffer_size = 64M
+myisam_sort_buffer_size = 128M
+myisam_max_sort_file_size = 10G
+myisam_repair_threads = 1
+myisam_recover
+
+
+[mysqldump]
+quick
+max_allowed_packet = 256M
+
+
+[mysql]
+auto-rehash
+prompt=\\u@\\h:\\d \\R:\\m>
+
+
+[myisamchk]
+key_buffer_size = 512M
+sort_buffer_size = 512M
+read_buffer = 8M
+write_buffer = 8M
+
+[mysqlhotcopy]
+interactive-timeout
+
+[mysqld_safe]
+open-files-limit = 16384
+
+
+
+5.在my.cnf中的[mysqld_multi]项设置的user和password是用来关闭数据库实例的
+	根据配置中的用户名和密码授权该用户shutdown权限(见第7步)
+
+
+6.启动/关闭
+mysqld_multi start 启动所有
+mysqld_multi start 1 启动[mysqld1] 
+mysqld_multi --defaults-file=/etc/my_multi.cnf start/stop带配置文件启动和停止 
+mysqld_multi stop  关闭所有
+mysqld_multi start 1 关闭[mysqld1] 
+*如果没有第5步的设置，也可以如下指定有shutdown权限的其他用户和密码进行关闭：
+mysqld_multi --user=root --password=123456 stop
+
+
+7.设置mysql用户(关于用户权限的修改都需要进行 flush privileges 后才能生效)
+所有实例上都设置根用户root和管理admin(见第5步解释)
+grant all privileges on *.* to root@'%' identified by '123456' with grant option; 
+grant shutdown on *.* to admin@'localhost' identified by 'duoyuan'; 
+grant shutdown on *.* to admin@'127.0.0.1' identified by 'duoyuan'; 
+flush privileges;
+
+
+[mysqld1]上的应用用户 super_mem_user 和只读用户 reader :
+grant select,insert,update,delete on `super_memory`.* to super_mem_user@'127.0.0.1' identified by '123456';
+grant select,insert,update,delete on `super_memory`.* to super_mem_user@'localhost' identified by '123456';
+grant file on *.* to super_mem_user@'127.0.0.1';
+grant file on *.* to super_mem_user@'localhost';
+grant usage on *.* to reader@'127.0.0.1' identified by '123456';
+grant usage on *.* to reader@'localhost' identified by '123456';
+grant select on `super_memory`.* to reader@'127.0.0.1';
+grant select on `super_memory`.* to reader@'localhost';
+flush privileges;
+
+
+
+[mysqld*]上的应用用户 app_user 和只读用户 reader :
+grant select,insert,update,delete on `words_tool`.* to app_user@'127.0.0.1' identified by '123456';
+grant select,insert,update,delete on `inactive_data`.* to app_user@'127.0.0.1';
+grant file on *.* to app_user@'127.0.0.1';
+grant usage on *.* to reader@'127.0.0.1'  identified by '123456';
+grant select on `words_tool`.* to reader@'127.0.0.1';
+grant select on `inactive_data`.* to reader@'127.0.0.1';
+flush privileges;
+
+
+[mysqld*]上的应用用户 sm_user 和只读用户 reader :
+grant select,insert,update,delete on `studymate`.* to sm_user@'127.0.0.1' identified by '123456';
+grant file on *.* to sm_user@'127.0.0.1';
+grant usage on *.* to reader@'127.0.0.1'  identified by '123456';
+grant select on `studymate`.* to reader@'127.0.0.1';
+flush privileges;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+~

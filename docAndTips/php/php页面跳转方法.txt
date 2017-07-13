@@ -1,0 +1,63 @@
+﻿PHP被许多程序员用来开发WEB的首选语言。在实际开发中，网站的各项功能都可以通过PHP语言的编写来满足，比如PHP页面跳转这一方法。
+
+探讨PHP变量解析顺序如何获取提交数据
+深入解读PHP运行机制
+浅析PHP函数extract()应用技巧
+为你总结一些PHP信息函数
+PHP查询字符串技巧分享
+Web系统中，从一个网页跳转到另一个网页，是LAMP项目中最常用的技术之一。页面跳转可能是由于用户单击链接、按钮等引发的，也可能是系统自动产生的。 此处介绍PHP中常用的实现页面自动跳转的方法。
+
+PHP页面跳转一、header()函数
+
+header()函数是PHP中进行页面跳转的一种十分简单的方法。header()函数的主要功能是将HTTP协议标头(header)输出到浏览器。
+
+header()函数的定义如下：
+
+void header (string string [,bool replace [,int http_response_code]])
+
+可选参数replace指明是替换前一条类似标头还是添加一条相同类型的标头，默认为替换。
+
+第二个可选参数http_response_code强制将HTTP相应代码设为指定值。 header函数中Location类型的标头是一种特殊的header调用，常用来实现页面跳转。注意：1.location和“:”号间不能有空格，否则不会跳转。
+
+2.在用header前不能有任何的输出。
+
+3.header后的PHP代码还会被执行。例如，将浏览器重定向到lamp兄弟连官方论坛
+
+< ?php 
+//重定向浏览器 
+header("Location: http://bbs.lampbrother.net"); 
+//确保重定向后，后续代码不会被执行 
+exit;
+?>  
+PHP页面跳转二、Meta标签
+
+Meta标签是HTML中负责提供文档元信息的标签，在PHP程序中使用该标签，也可以实现页面跳转。 若定义http-equiv为refresh,则打开该页面时将根据content规定的值在一定时间内跳转到相应页面。
+
+若设置content="秒数;url=网址"，则定义了经过多长时间后页面跳转到指定的网址。例如，使用meta标签实现疫苗后页面自动跳转到LAMP兄弟连官方论坛。
+
+< meta http-equiv="refresh" content="1;url=http://bbs.lampbrother.net"> 
+例如，以下程序meta.php实现在该页面中停留一秒后页面自动跳转到bbs.lampbrother.net。
+
+< ?php   
+$url = "http://bbs.lampbrother.net"; ?> 
+< html>   
+< head>   
+< meta http-equiv="refresh" content="1;  
+url=< ?php echo $url; ?>">   
+< /head>   
+< body>   
+页面只停留一秒……   
+< /body> 
+< /html>  
+PHP页面跳转三、JavaScript
+
+例如，此代码可以放在程序中的任何合法位置。
+
+< ?php  
+$url = "http://bbs.lampbrother.net";  
+echo "< script language='javascript' 
+type='text/javascript'>";  
+echo "window.location.href='$url'";  
+echo "< /script>";  
+?> 
+以上就是我们向大家介绍的三种PHP页面跳转实现方法。

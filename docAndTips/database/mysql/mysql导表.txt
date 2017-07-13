@@ -1,0 +1,5 @@
+﻿mysqldump -uroot -p --skip-opt --insert-ignore --compact words_tool user_accept_mnemonic_logs > user_accept_mnemonic_logs.sqltbl
+
+
+
+/usr/bin/mysql -uroot -p words_tool < /home/zxg/user_accept_mnemonic_logs.sqltbl &

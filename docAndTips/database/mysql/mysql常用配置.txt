@@ -1,0 +1,10 @@
+﻿auto-rehash加入my.cnf中，按tab键自动补全内容
+
+
+
+[client] 在下面添加
+default-character-set=utf8 默认字符集为utf8
+在找到[mysqld] 添加
+default-character-set=utf8 默认字符集为utf8
+init_connect='SET NAMES utf8' （设定连接mysql数据库时使用utf8编码，以让mysql数据库为utf8运行）
+修改好后，重新启动mysql
