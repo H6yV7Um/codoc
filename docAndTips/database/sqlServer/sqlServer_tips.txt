@@ -1,2 +1,2 @@
-phpÁ¬½ÓsqlserverÌØ±ğÂı£¬ĞèÒªÓÃ³¬¼¶¹ÜÀíÈ¨ÏŞÔËĞĞ£º 
+ï»¿phpè¿æ¥sqlserverç‰¹åˆ«æ…¢ï¼Œéœ€è¦ç”¨è¶…çº§ç®¡ç†æƒé™è¿è¡Œï¼š 
 	netsh interface tcp set global rss=disabled autotuninglevel=disabled

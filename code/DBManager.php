@@ -282,7 +282,7 @@ class DBManager{
 				    'names_encode'=> DB_ENCODE
 	    		));
 	    	}else{
-	    		return MysqlMaster::getInstance(array(
+	    		return MysqlSlave::getInstance(array(
 	    		    'host'=>$config['host'],
 	    		    'port'=>$config['port'],
 	    		    'dbname'=>$config['dbname'],
