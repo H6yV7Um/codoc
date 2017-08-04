@@ -121,6 +121,8 @@
 1、用 remote_repo_local_name/remote_branch_name 这样的形式表示远程分支，如：origin/master
 2、 git checkout -b mybranchname origin/serverfix 
 	创建并切换到一个本地分支mybranchname并同步远程分支origin/serverfix的内容到本地mybranchname分支上
+2、  git push origin -u mybranchname
+	将新创建的本地分支mybranchname，推送并在远程仓库中创建对应的分支mybranchname 
 3、 git merge origin/serverfix
 	将远程分支origin/serverfix合并到当前工作的分支上
 4、 git push [remote_repo_local_name] [:remote_branch_name]
