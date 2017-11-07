@@ -137,6 +137,11 @@
 8、 git branch --set-upstream-to=origin/dev
 	将当前分支与远程的origin/dev关联，以便运行git pull; git push时，直接拉取或推送到关联的远程分支上
 
+【更换remote地址】
+1、git remote remove origin # 删掉原来git源
+2、git remote add origin [url] # 将新源地址写入本地版本库配置文件
+3、git push -u origin master # 提交所有代码
+
 
 【Git在服务器上部署】
 方法1、

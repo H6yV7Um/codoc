@@ -6,22 +6,28 @@ MAIL_SUBMIT=http://all.vic.sina.com.cn/wbframework/space_check.php
 has_warnning=0
 SEND_AFTER_TIME=3600
 MEM_LIMIT=50
-CPU_LIMIT=80
+CPU_LIMIT=90
 DISK_LIMIT=90
-SERVER_NAME=10.210.227.54
+SERVER_NAME=10.13.130.23
 
 ###################################### disk status ###############################
 DISKFILE=/dev/vda1
 declare -i disk_ratio=`df | grep "${DISKFILE}" | awk '{print $5}' | cut -f 1 -d '%'`
 if [ $disk_ratio -gt $DISK_LIMIT ]; then
-	if [ $has_warnning -eq 0 ]; then
-		echo "$time" >> $MAILFILE
-		echo "$SERVER_NAME" >> $MAILFILE
-		echo "<br>" >> $MAILFILE
-		has_warnning=1
+	echo '' > /var/log/recorD.log
+	echo '' > /var/log/metad/message.log
+
+	disk_ratio=`df | grep "${DISKFILE}" | awk '{print $5}' | cut -f 1 -d '%'`
+	if [ $disk_ratio -gt $DISK_LIMIT ]; then
+        	if [ $has_warnning -eq 0 ]; then
+                	echo "$time" >> $MAILFILE
+	                echo "[$SERVER_NAME]" >> $MAILFILE
+        	        echo "<br>" >> $MAILFILE
+                	has_warnning=1
+	        fi
+		echo "$DISKFILE[${disk_ratio}%], >${DISK_LIMIT}%" >> $MAILFILE
+		echo "<br>" >> $MAILFILE	
 	fi
-	echo "$DISKFILE[>${system_disk}%]" >> $MAILFILE
-	echo "<br>" >> $MAILFILE
 fi
 
 ###################################### process status #############################
@@ -35,9 +41,9 @@ ps aux | awk '$3>"'$CPU_LIMIT'" || $4>"'$MEM_LIMIT'"'| while read -r line; do
 	if [ $cup_ratio -gt $CPU_LIMIT ]; then
         	if [ $has_warnning -eq 0 ]; then
                 	echo "$time " >> $MAILFILE
-			echo "$SERVER_NAME" >> $MAILFILE
+			echo "[$SERVER_NAME]" >> $MAILFILE
 			echo "<br>" >> $MAILFILE
-        	        set has_warnning=1
+        	        has_warnning=1
 	        fi
         	echo "CPU[${cup_ratio}%], >${CPU_LIMIT}%, process[${pid}], cmd[${cmd}]" >>  $MAILFILE
 		echo "<br>" >> $MAILFILE
@@ -46,7 +52,7 @@ ps aux | awk '$3>"'$CPU_LIMIT'" || $4>"'$MEM_LIMIT'"'| while read -r line; do
 	if [ $mem_ratio -gt $MEM_LIMIT ]; then
         	if [ $has_warnning -eq 0 ]; then
                 	echo "$time" >> $MAILFILE
-			echo "$SERVER_NAME" >> $MAILFILE
+			echo "[$SERVER_NAME]" >> $MAILFILE
 			echo "<br>" >> $MAILFILE
         	        has_warnning=1
 	        fi

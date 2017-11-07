@@ -1,0 +1,7 @@
+一、查看linux release版本信息
+1、lsb_release -a
+	这个命令适用于所有遵守LSB规范的的linux，包括Redhat、SuSE、Debian、Ubuntu、Centos等发行版
+2、 uname -a
+	可以显示系统核心信息
+3、cat /etc/redhat-release
+	该方法适用于RedHat、CentOS
