@@ -45,24 +45,16 @@
 　　如果打开了安全模式，那么函数禁止是可以不需要的，但是我们为了安全还是考虑进去。比如，
 　　我们觉得不希望执行包括system()等在那的能够执行命令的php函数，或者能够查看php信息的
 　　phpinfo()等函数，那么我们就可以禁止它们：
-
 　　disable_functions = system,passthru,exec,shell_exec,popen,phpinfo
-
 　　如果你要禁止任何文件和目录的操作，那么可以关闭很多文件操作
-
 　　disable_functions = chdir,chroot,dir,getcwd,opendir,readdir,scandir,fopen,unlink,delete,copy,mkdir, 　　rmdir,rename,file,file_get_contents,fputs,fwrite,chgrp,chmod,chown
-
 　　以上只是列了部分不叫常用的文件处理函数，你也可以把上面执行命令函数和这个函数结合，
 　　就能够抵制大部分的phpshell了。
 
 (7) 关闭PHP版本信息在http头中的泄漏
-
 　　我们为了防止黑客获取服务器中php版本的信息，可以关闭该信息斜路在http头中：
-
 　　expose_php = Off
-
 　　比如黑客在 telnet www.12345.com 80 的时候，那么将无法看到PHP的信息。
-
 (8) 关闭注册全局变量
 
 　　在PHP中提交的变量，包括使用POST或者GET提交的变量，都将自动注册为全局变量，能够直接访问，
