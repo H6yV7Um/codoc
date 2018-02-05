@@ -1,0 +1,706 @@
+﻿
+##########################################################################################################################
+#########################################【54/55/56线上服务器部署（docker方式）】#########################################
+##########################################################################################################################
+export http_proxy="10.39.59.21:3128"
+ssh -i /d/ssh_key_fanqi xiangguang@10.85.47.54
+ssh -i /d/ssh_key_fanqi xiangguang@10.85.47.55
+ssh -i /d/ssh_key_fanqi xiangguang@10.85.47.56
+13884
+asdf1943
+-----------------------------------------------【10.85.47.54】-----------------------------------------------
+启动负载器
+docker stop load_balancer && docker rm load_balancer && docker run --name load_balancer \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/hd.weibo.com.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+1、启动redis
+docker stop redisMaster6379 && docker rm redisMaster6379 && docker run --name redisMaster6379 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/redisdata/conf/master6379.conf:/usr/local/etc/redis.conf \
+	-v /data0/redisdata/data/master6379:/data \
+	-d registry.api.weibo.com/hd-weibo-com/hd-redis:v1 redis-server /usr/local/etc/redis.conf
+docker stop redisSentinel26379 && docker rm redisSentinel26379 && docker run --name redisSentinel26379 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/redisdata/conf/sentinel26379.conf:/usr/local/etc/redis/sentinel.conf \
+	-v /data0/redisdata/data/sentinel26379:/data \
+	-d registry.api.weibo.com/hd-weibo-com/hd-redis:v1 redis-sentinel /usr/local/etc/redis/sentinel.conf
+docker stop redisSlave6381_to_55 && docker rm redisSlave6381_to_55 && docker run --name redisSlave6381_to_55 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/redisdata/conf/slave6381_to_55.conf:/usr/local/etc/redis.conf \
+	-v /data0/redisdata/data/slave6381_to_55:/data \
+	-d registry.api.weibo.com/hd-weibo-com/hd-redis:v1 redis-server /usr/local/etc/redis.conf
+2、启动mongodb
+docker stop mongodb27017 && docker rm mongodb27017 && docker run --name mongodb27017 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/mongodata/data/port27017:/data/db \
+	-d registry.api.weibo.com/hd-weibo-com/hd-mongodb:v1 mongod --replSet z
+3、启动案例库
+docker stop case_nginx && docker rm case_nginx && docker run --name case_nginx \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/case.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+docker stop case_fpm && docker rm case_fpm && docker run --name case_fpm \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php-fpm
+4、启动建业
+docker stop snap1 && docker rm snap1 && docker run --name snap1 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/snaplogs/snap8020:/usr/local/tomcat \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-v /data0/z/conf/snap8020.conf:/etc/supervisor/conf.d/supervisord.conf \
+	-d registry.api.weibo.com/hd-weibo-com/hd-java8u151_tomcat_xvfb_spvr:v1
+docker stop snap2 && docker rm snap2 && docker run --name snap2 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/snaplogs/snap8030:/usr/local/tomcat \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-v /data0/z/conf/snap8030.conf:/etc/supervisor/conf.d/supervisord.conf \
+	-d registry.api.weibo.com/hd-weibo-com/hd-java8u151_tomcat_xvfb_spvr:v1
+docker stop jy_dfs && docker rm jy_dfs && docker run --name jy_dfs \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/dfs:/usr/local/tomcat/dfs \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-d registry.api.weibo.com/hd-weibo-com/hd-tomcat:v1  \
+	java -cp classes:/usr/local/joblib/* com.sina.z.job.ZDfsServer /usr/local/tomcat/dfs 10.85.47.54 8060 10.85.47.55/16 8061
+docker stop jy_pushdata && docker rm jy_pushdata && docker run --name jy_pushdata \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-d registry.api.weibo.com/hd-weibo-com/hd-tomcat:v1  \
+	java -cp classes:/usr/local/joblib/* com.sina.z.job.PushData "0 30 2 * * ?" "0 33 2 * * ?" "0 35 2 * * ?" 6501
+docker stop jy_tomcat && docker rm jy_tomcat && docker run --name jy_tomcat \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/src/tomcatROOT:/usr/local/tomcat/webapps/ROOT \
+	-v /data0/z/dfs:/data0/z/dfs \
+	-v /etc/hosts:/etc/hosts \
+	-v /data0/z/logs:/usr/local/tomcat/logs \
+	-d registry.api.weibo.com/hd-weibo-com/hd-tomcat:v1 
+docker stop jy_nginx && docker rm jy_nginx && docker run --name jy_nginx \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/jy.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/z/src/nginxHtml:/var/www/html \
+	-v /data0/z/dfs:/var/www/html/dfs \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+
+-----------------------------------------------【10.85.47.55】-----------------------------------------------
+启动负载器
+docker stop load_balancer && docker rm load_balancer && docker run --name load_balancer \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/hd.weibo.com.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+1、启动redis
+docker stop redisMaster6379 && docker rm redisMaster6379 && docker run --name redisMaster6379 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/redisdata/conf/master6379.conf:/usr/local/etc/redis.conf \
+	-v /data0/redisdata/data/master6379:/data \
+	-d registry.api.weibo.com/hd-weibo-com/hd-redis:v1 redis-server /usr/local/etc/redis.conf
+docker stop redisSentinel26379 && docker rm redisSentinel26379 && docker run --name redisSentinel26379 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/redisdata/conf/sentinel26379.conf:/usr/local/etc/redis/sentinel.conf \
+	-v /data0/redisdata/data/sentinel26379:/data \
+	-d registry.api.weibo.com/hd-weibo-com/hd-redis:v1 redis-sentinel /usr/local/etc/redis/sentinel.conf
+docker stop redisSlave6381_to_54 && docker rm redisSlave6381_to_54 && docker run --name redisSlave6381_to_54 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/redisdata/conf/slave6381_to_54.conf:/usr/local/etc/redis.conf \
+	-v /data0/redisdata/data/slave6381_to_54:/data \
+	-d registry.api.weibo.com/hd-weibo-com/hd-redis:v1 redis-server /usr/local/etc/redis.conf
+2、启动mongodb
+docker stop mongodb27017 && docker rm mongodb27017 && docker run --name mongodb27017 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/mongodata/data/port27017:/data/db \
+	-d registry.api.weibo.com/hd-weibo-com/hd-mongodb:v1 mongod --replSet z
+3、启动案例库
+docker stop case_nginx && docker rm case_nginx && docker run --name case_nginx \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/case.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+docker stop case_fpm && docker rm case_fpm && docker run --name case_fpm \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php-fpm
+4、启动建业：
+docker stop snap1 && docker rm snap1 && docker run --name snap1 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/snaplogs/snap8020:/usr/local/tomcat \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-v /data0/z/conf/snap8020.conf:/etc/supervisor/conf.d/supervisord.conf \
+	-d registry.api.weibo.com/hd-weibo-com/hd-java8u151_tomcat_xvfb_spvr:v1
+docker stop snap2 && docker rm snap2 && docker run --name snap2 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/snaplogs/snap8030:/usr/local/tomcat \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-v /data0/z/conf/snap8030.conf:/etc/supervisor/conf.d/supervisord.conf \
+	-d registry.api.weibo.com/hd-weibo-com/hd-java8u151_tomcat_xvfb_spvr:v1
+docker stop jy_tomcat && docker rm jy_tomcat && docker run --name jy_tomcat \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/src/tomcatROOT:/usr/local/tomcat/webapps/ROOT \
+	-v /data0/z/dfs:/data0/z/dfs \
+	-v /etc/hosts:/etc/hosts \
+	-v /data0/z/logs:/usr/local/tomcat/logs \
+	-d registry.api.weibo.com/hd-weibo-com/hd-tomcat:v1 
+docker stop jy_nginx && docker rm jy_nginx && docker run --name jy_nginx \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/jy.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/z/src/nginxHtml:/var/www/html \
+	-v /data0/z/dfs:/var/www/html/dfs \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+docker stop jy_dfs && docker rm jy_dfs && docker run --name jy_dfs \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/dfs:/usr/local/tomcat/dfs \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-d registry.api.weibo.com/hd-weibo-com/hd-tomcat:v1  \
+	java -cp classes:/usr/local/joblib/* com.sina.z.job.ZDfsServer /usr/local/tomcat/dfs 10.85.47.55 8060 10.85.47.54/16 8061
+
+-----------------------------------------------【10.85.47.56】-----------------------------------------------
+启动负载器
+docker stop load_balancer && docker rm load_balancer && docker run --name load_balancer \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/hd.weibo.com.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+1、启动redis
+docker stop redisSlave6382_to_54 && docker rm redisSlave6382_to_54 && docker run --name redisSlave6382_to_54 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/redisdata/conf/slave6382_to_54.conf:/usr/local/etc/redis.conf \
+	-v /data0/redisdata/data/slave6382_to_54:/data  \
+	-d registry.api.weibo.com/hd-weibo-com/hd-redis:v1 redis-server /usr/local/etc/redis.conf
+docker stop redisSlave6383_to_55 && docker rm redisSlave6383_to_55 && docker run --name redisSlave6383_to_55 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/redisdata/conf/slave6383_to_55.conf:/usr/local/etc/redis.conf \
+	-v /data0/redisdata/data/slave6383_to_55:/data  \
+	-d registry.api.weibo.com/hd-weibo-com/hd-redis:v1 redis-server /usr/local/etc/redis.conf
+2、启动mongodb
+docker stop mongodb27017 && docker rm mongodb27017 && docker run --name mongodb27017 \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/mongodata/data/port27017:/data/db \
+	-d registry.api.weibo.com/hd-weibo-com/hd-mongodb:v1 mongod --replSet z
+3、启动案例库
+docker stop case_nginx && docker rm case_nginx && docker run --name case_nginx \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/case.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+docker stop case_fpm && docker rm case_fpm && docker run --name case_fpm \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/alk/src:/var/www/html \
+	-v /data0/statlogs/data:/data0/statlogs/data \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php-fpm
+4、案例库仿真环境
+docker stop case_simulated_nginx && docker rm case_simulated_nginx && docker run --name case_simulated_nginx \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/case_simulated.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/alk/simulated:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+docker stop case_simulated_fpm && docker rm case_simulated_fpm && docker run --name case_simulated_fpm \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/alk/simulated:/var/www/html \
+	-v /data0/fpmdata/case_simulated/php-fpm.d:/usr/local/etc/php-fpm.d \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v3 php-fpm
+5、日志收集
+docker stop log_nginx && docker rm log_nginx && docker run --name log_nginx \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/l.conf:/etc/nginx/nginx.conf \
+	-v /data0/statlogs/data:/var/log/nginx \
+	-v /data0/statlogs/html:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+
+爬虫跳转：
+docker stop alk_for_seo && docker rm alk_for_seo && docker run --name alk_for_seo \
+	--net=host \
+	-d registry.api.weibo.com/hd-weibo-com/hd-alk_node_for_seo:v1
+
+-----------------------------------------------【公用部分】-----------------------------------------------
+1、mongodb复本集
+	1）分别在各机器上启动实例后，在primary节点上做如下初始化
+	rs.initiate({ _id:"z", members:[{_id:0,host:"10.85.47.54:27017"},{_id:1,host:"10.85.47.55:27017"},{_id:2,host:"10.85.47.56:27017"}]});
+	use z;
+	db.createUser({user: "z",pwd: "z",roles: [ { role: "dbOwner", db: "z" } ]});
+
+2、将新的mongodb节点加入到已经存在的复本集里
+	1）新节点中运行新实例
+		docker run --net=host --name mongodb27017 -v /data0/mongodata/data/port27017:/data/db -d hd-mongodb:v1 mongod --replSet z
+	2）在primary节点上运行rs.add()命令添加，如：
+		rs.add("10.85.47.54:27017")
+		rs.add("10.85.47.55:27017")
+	3）或运行rs.remove()将节点摘除，如：
+		rs.remove("10.85.47.54:27017")
+		rs.remove("10.85.47.55:27017")
+
+3、三台机器上做如下host映射
+	10.85.47.56     hd.weibo.com
+	10.85.47.56     jy.hd.weibo.com
+	10.211.141.105  git.vic.sina.com.cn
+	172.16.42.236   all.vic.sina.com.cn
+	172.16.58.252   all.vic.sina.com.cn
+4、做数据库连接测试
+	案例:
+	mysql -h10.75.21.165 -uallvic -pREyULjFuZQufk -P3715
+	建业:
+	mysql -hm7627i.eos.grid.sina.com.cn -uwbcsc_jy_rw -p2bdc68920b7b678 -P7627
+
+
+
+-----------------------------------------------【tips】-----------------------------------------------
+1、镜像安装我们需要的php扩展:
+	方法1：
+	apt-get update && apt-get install -y ImageMagick && apt-get install --fix-missing -y libmagickwand-dev && pecl install redis yaf imagick
+	方法2：
+	docker-php-ext-install gd
+
+2、导出/导入镜像
+docker commit 159c4225fc47 hd-fpm:v1							【 从容器159c4225fc47中，提取其镜像并命名为 hd-fpm:v1 】
+docker tag php-fpm:old hd-fpm:new 								【 给镜像php-fpm:old打一个标签hd-fpm:new 】
+docker save hd-fpm:v1 > hd-fpm_v1.tar 							【 将镜像hd-fpm:v1导出 】
+docker load < hd-fpm_v1.tar 									【 将镜像hd-fpm:v1导入 】
+docker exec -ti hd-fpm:v1 /bin/bash								【 启动一个容器，并在其中运行bash 】
+
+docker login registry.api.weibo.com 							【 登陆registry.api.weibo.com 】
+docker push registry.api.weibo.com/hd-weibo-com/hd-fpm:v1   	【 将镜像推送到registry.api.weibo.com的项目hd-weibo-com上 】
+
+
+##########################################################################################################################
+#########################################【测试环境56、57服务器部署（docker方式）】#######################################
+##########################################################################################################################
+export http_proxy="10.39.59.21:3128"
+【基础环境安装】
+1、安装gcc编译python
+	yum install -y gcc zlib-devel openssl-devel
+2、xvfb镜像安装
+	apt-get update && apt-get install xvfb && apt-get install openjfx && \
+	apt-get install supervisor && rm -rf /var/lib/apt/lists/*
+3、freetype安装
+	docker-php-ext-configure gd --with-jpeg-dir --with-png-dir --with-freetype-dir
+	docker-php-ext-install gd
+
+-----------------------------------------------【10.210.234.56】-----------------------------------------------
+/usr/local/tomcat/webapps/manager/WEB-INF/web.xml
+启动建业：
+Xvfb :0 -screen 0 1024x768x24 &
+export DISPLAY=:0
+
+docker stop snap1 && docker rm snap1 && docker run --name snap1 \
+	--add-host jy.hd.weibo.com:10.210.234.56 \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/snaplogs/snap1.log:/snap/logs/snap.log \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-d registry.api.weibo.com/hd-weibo-com/hd-java8u151_tomcat_xvfb_spvr:v1
+docker stop jy_dfs && docker rm jy_dfs && docker run --name jy_dfs \
+	-p 8060:8060 \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/dfs:/usr/local/tomcat/dfs \
+	-v /data0/z/src/jobLib:/usr/local/joblib \
+	-d registry.api.weibo.com/hd-weibo-com/hd-tomcat:v1  \
+	java -cp classes:/usr/local/joblib/* com.sina.z.job.ZDfsServer /usr/local/tomcat/dfs 0.0.0.0 8060 172.17.0.1/8 8061
+docker stop jy_pushdata && docker rm jy_pushdata && docker run --name jy_pushdata \
+        -v /etc/localtime:/etc/localtime:ro \
+        -v /data0/z/src/jobLib:/usr/local/joblib \
+        -d registry.api.weibo.com/hd-weibo-com/hd-tomcat:v1  \
+        java -cp classes:/usr/local/joblib/* com.sina.z.job.PushData "0 30 2 * * ?" "0 33 2 * * ?" "0 35 2 * * ?" 6501
+docker stop jy_tomcat && docker rm jy_tomcat && docker run --name jy_tomcat \
+	--link=snap1:snap1 \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/z/src/tomcatROOT:/usr/local/tomcat/webapps/ROOT \
+	-v /data0/z/dfs:/data0/z/dfs \
+	-d registry.api.weibo.com/hd-weibo-com/hd-tomcat:v1 
+	
+docker stop jy_nginx && docker rm jy_nginx && docker run --name jy_nginx \
+	--link=jy_tomcat:jy_tomcat \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/jy.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/z/src/nginxHtml:/var/www/html \
+	-v /data0/z/dfs:/var/www/html/dfs \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+
+案例库：
+docker stop case_fpm && docker rm case_fpm && docker run --name case_fpm \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php-fpm
+docker stop case_nginx && docker rm case_nginx && docker run --name case_nginx \
+	--link=case_fpm:case_fpm \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/case.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+爬虫跳转：
+docker stop alk_for_seo && docker rm alk_for_seo && docker run --name alk_for_seo \
+	-p 3080:3000 \
+	-v /data0/nodejs/src:/appdata \
+	-d registry.api.weibo.com/hd-weibo-com/hd-alk_node_for_seo:v1
+
+启动负载器：
+docker stop load_balancer && docker rm load_balancer && docker run --name load_balancer \
+	-p 80:80 \
+	--link=jy_nginx:jy_nginx \
+	--link=case_nginx:case_nginx \
+	--link=alk_for_seo:alk_for_seo \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/hd.weibo.com.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+-------------------------------------------------------------
+/usr/local/etc/php-fpm.d
+docker stop php-fpm && docker rm php-fpm && docker run --name php-fpm \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php-fpm
+-----------------------------------------------【10.210.234.57】-----------------------------------------------
+
+案例库：
+docker stop case_fpm && docker rm case_fpm && docker run --name case_fpm \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v3 php-fpm
+docker stop case_nginx && docker rm case_nginx && docker run --name case_nginx \
+	--link=case_fpm:case_fpm \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/case.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-v /data0/alk/src:/var/www/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+
+启动负载器：
+docker stop load_balancer && docker rm load_balancer && docker run --name load_balancer \
+	-p 80:80 \
+	--link=case_nginx:case_nginx \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/nginxdata/conf/hd.weibo.com.conf:/etc/nginx/nginx.conf \
+	-v /data0/nginxdata/logs:/var/log/nginx \
+	-v /data0/nginxdata/default_root:/usr/share/nginx/html \
+	-d registry.api.weibo.com/hd-weibo-com/hd-nginx:v1
+
+
+##########################################################################################################################
+#######################################################【33服务器部署】###################################################
+##########################################################################################################################
+export http_proxy="10.39.59.21:3128"
+《nginx安装》
+To set up the yum repository for RHEL/CentOS, create the file named /etc/yum.repos.d/nginx.repo with the following contents:
+[nginx]
+name=nginx repo
+baseurl=http://nginx.org/packages/OS/OSRELEASE/$basearch/
+gpgcheck=0
+enabled=1
+Replace “OS” with “rhel” or “centos”, depending on the distribution used, and “OSRELEASE” with “6” or “7”, for 6.x or 7.x versions, respectively.
+
+
+《Redis安装》
+1. /root/packages 源码编译安装
+2. 启动程序/root/packages/bin
+
+
+《Mongodb安装》
+1、https://docs.mongodb.com/master/tutorial/install-mongodb-on-red-hat/
+    1)  Configure the package management system (yum).
+	Create a /etc/yum.repos.d/mongodb-org-3.4.repo file so that you can install MongoDB directly, using yum.
+	Use the following repository file:
+
+	[mongodb-org-3.4]
+	name=MongoDB Repository
+	baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.4/x86_64/
+	gpgcheck=1
+	enabled=1
+	gpgkey=https://www.mongodb.org/static/pgp/server-3.4.asc
+
+    2)sudo yum install -y mongodb-org
+
+2、Remove Packages.
+   Remove any MongoDB packages that you had previously installed.
+   	sudo yum erase $(rpm -qa | grep mongodb-org)
+
+3、Remove Data Directories.
+   Remove MongoDB databases and log files.
+
+	sudo rm -r /var/log/mongodb
+	sudo rm -r /var/lib/mongo
+
+《截图服务安装》
+yum install Xvfb
+yum install xorg-x11-fonts*
+
+
+《php7的编译安装》
+cd ImageMagick-6.9.9-15
+ ./configure 
+ make
+ make install
+ make check
+
+./configure  \
+--prefix=/root/packages/bin/php719 \
+--with-curl \
+--with-gd \
+--with-jpeg-dir \
+--with-png-dir \
+--with-freetype-dir \
+--with-mcrypt \
+--with-mysqli \
+--with-openssl \
+--with-pcre-dir \
+--with-pdo-mysql \
+--with-zlib \
+--enable-bcmath \
+--enable-dba \
+--enable-exif \
+--enable-mbstring \
+--enable-soap \
+--enable-sockets \
+--enable-zip \
+--enable-wddx \
+--enable-fpm \
+--enable-maintainer-zts
+
+make && make test && make install
+
+cd imagick-3.4.3
+/usr/local/php719/bin/phpize 
+./configure  --with-php-config=/usr/local/php719/bin/php-config --prefix=/usr/local/php719/
+make && make install
+
+http://hd.weibo.com/case_dev/gitupdate.php?code=ihadaGAerfaGAdgad243ggsfq4qety4Agaqeba
+
+三、部署
+
+【安装maven工具】
+apache-maven-3.5.0-bin.zip
+
+【bash shell下运行】
+cd /d/www/git/hd
+
+/d/appIns/apache-maven-3.5.0/bin/mvn -f z-pom/pom-web-modules.xml clean package
+
+mv z-web/target/z-web.war .
+mv z-fe/target/z-fe.war .
+mv z-app/target/z-app.war .
+
+rm -rf D:/appIns/apache-tomcat-9.0.0.M22/webapps/ROOT
+rm -rf D:/appIns/nginx-1.12.1/html
+unzip -o z-fe.war -x META-INF/* WEB-INF/* -d D:/appIns/nginx-1.12.1/html
+unzip -o z-app.war -x META-INF/* WEB-INF/* -d D:/appIns/nginx-1.12.1/html
+unzip -o z-web.war -d D:/appIns/apache-tomcat-9.0.0.M22/webapps/ROOT
+
+
+D:\appIns\apache-tomcat-9.0.0.M22\bin\catalina  jpda start
+
+【Job任务】
+/d/appIns/apache-maven-3.5.0/bin/mvn -f z-pom/pom-job-modules.xml clean package
+rm -rf z-job-bin
+mv z-job/target/z-job-bin .
+
+java -cp lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZDfsServer /d/data2/z/dfs 127.0.0.1 8060 127.0.0.1/32 8061 &
+
+【双主从redis】
+redis-cli.exe -h 10.210.227.33 -p 6380 -a zgmmnyywn
+
+10.210.227.33>
+ ./redis-server master.config &
+ ./redis-server slave.config &
+
+10.210.227.54>
+ /root/packages/bin/redis/redis-server /root/packages/bin/redis/master.config 
+ /root/packages/bin/redis/redis-server /root/packages/bin/redis/slave.config 
+
+
+【将页未央的数据库导出】
+mysqldump -uzz -p257379cf64650ff --skip-opt --add-drop-table --single-transaction --hex-blob --quick --create-option --disable-keys --extended-insert --set-charset z | gzip > z.sql.gz
+
+导入数据时发现这几个表（media message site user）数据无法导入，那是因为我们的数据库是5.1版本，不支持uft8mb4编码，需要重新新的数据库
+
+
+
+##########################################################################################################################
+#######################################################【页未央服务器】###################################################
+##########################################################################################################################
+页未央文档涉及到的服务器
+	IP					 管理员
+10.13.4.21 				yongpeng1
+10.13.4.22 				yongpeng1
+10.13.88.181			yongpeng1
+10.13.88.180			yongpeng1
+10.79.96.22				yongpeng1
+10.79.96.25				yongpeng1
+10.79.96.26				yongpeng1
+172.16.190.141			yongpeng1
+
+【mongodb部署状况】
+10.13.4.22:27177 SECONDARY
+10.13.4.22:27178 ARBITER
+10.13.4.21:27179 PRIMARY
+
+-----------------------------------------------【两服务器程序对比】-----------------------------------------------
+10.13.4.21>  
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZDfsServer /data2/z/dfs 10.13.4.21 8060 10.13.4.22/32 8061
+java -cp classes:lib/* -Xms128m -Xmx512m -Xmn64m com.sina.z.job.Scheduling 8001
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8020 8021 /data1/z/logs/snap-8020.log
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8030 8031 /data1/z/logs/snap-8030.log
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8040 8041 /data1/z/logs/snap-8040.log
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8050 8051 /data1/z/logs/snap-8050.log
+bin/mongod -f mongo.conf
+src/redis-server 10.13.4.21:6379
+src/redis-server 10.13.4.21:6389
+src/redis-server *:26379 [sentinel]
+/data0/z/jdk1.8.0_77/bin/java 
+				-Djava.util.logging.config.file=/data0/z/apache-tomcat-8.0.29/conf/logging.properties 
+			    -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager 
+			    -Xms1024m 
+			    -Xmx4096m 
+			    -Xmn1024m 
+			    -Djava.endorsed.dirs=/data0/z/apache-tomcat-8.0.29/endorsed 
+			    -classpath /data0/z/apache-tomcat-8.0.29/bin/bootstrap.jar:/data0/z/apache-tomcat-8.0.29/bin/tomcat-juli.jar 
+			    -Dcatalina.base=/data0/z/apache-tomcat-8.0.29 
+			    -Dcatalina.home=/data0/z/apache-tomcat-8.0.29 
+			    -Djava.io.tmpdir=/data0/z/apache-tomcat-8.0.29/temp org.apache.catalina.startup.Bootstrap start
+-----------------------------------------------------------------------------------------------------------------------------
+10.13.4.22>  
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZDfsServer /data2/z/dfs 10.13.4.22 8060 10.13.4.21/32 8061
+java -cp classes:lib/* -Xms128m -Xmx512m -Xmn64m com.sina.z.job.Scheduling 8001
+java -cp classes:lib/* com.sina.z.job.PushData 0 30 2 * * ? 0 33 2 * * ? 0 35 2 * * ? 6501
+java -cp classes:lib/* -agentlib:jdwp=transport=dt_socket,address=8023,server=y,suspend=n 
+						-Djava.rmi.server.hostname=10.13.4.22 
+						-Dcom.sun.management.jmxremote  
+						-Dcom.sun.management.jmxremote.port=8022  
+						-Dcom.sun.management.jmxremote.ssl=false  
+						-Dcom.sun.management.jmxremote.authenticate=false 
+					   -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8020 8021 /data1/z/logs/snap-8020.log
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8030 8031 /data1/z/logs/snap-8030.log
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8040 8041 /data1/z/logs/snap-8040.log
+java -cp classes:lib/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8050 8051 /data1/z/logs/snap-8050.log
+bin/mongod -f mongo.conf
+bin/mongod -f mongo.conf
+src/redis-server 10.13.4.22:6379
+src/redis-server 10.13.4.22:6389
+src/redis-server *:26379 [sentinel]
+/data0/z/jdk1.8.0_77/bin/java 
+				-Djava.util.logging.config.file=/data0/z/apache-tomcat-8.0.29/conf/logging.properties 
+			    -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager 
+			    -Xms1024m 
+				-Xmx4096m 
+				-Xmn1024m 
+				-Djava.rmi.server.hostname=10.13.4.22 
+				-Dcom.sun.management.jmxremote 
+				-Dcom.sun.management.jmxremote.port=8098 
+				-Dcom.sun.management.jmxremote.ssl=false 
+				-Dcom.sun.management.jmxremote.authenticate=false 
+				-agentlib:jdwp=transport=dt_socket,address=8099,server=y,suspend=n 
+				-Djava.endorsed.dirs=/data0/z/apache-tomcat-8.0.29/endorsed 
+				-classpath /data0/z/apache-tomcat-8.0.29/bin/bootstrap.jar:/data0/z/apache-tomcat-8.0.29/bin/tomcat-juli.jar 
+				-Dcatalina.base=/data0/z/apache-tomcat-8.0.29 
+				-Dcatalina.home=/data0/z/apache-tomcat-8.0.29 
+				-Djava.io.tmpdir=/data0/z/apache-tomcat-8.0.29/temp org.apache.catalina.startup.Bootstrap start
+
+/data0/z/jdk1.8.0_60/bin/java 
+			  	-Djava.util.logging.config.file=/data0/x/apache-tomcat-8.0.26/conf/logging.properties 
+		      	-Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager  
+		      	-Dx.home=file:///data0/x/config  
+		      	-Dtbo.home=file:///data0/x/config  
+		      	-Dgit.home=file:///data0/x/config  
+		      	-Djava.rmi.server.hostname=10.13.4.22  
+		      	-Dcom.sun.management.jmxremote  
+		      	-Dcom.sun.management.jmxremote.port=8198  
+		      	-Dcom.sun.management.jmxremote.ssl=false  
+		      	-Dcom.sun.management.jmxremote.authenticate=false  
+		      	-Djava.endorsed.dirs=/data0/x/apache-tomcat-8.0.26/endorsed  
+		      	-classpath /data0/x/apache-tomcat-8.0.26/bin/bootstrap.jar:/data0/x/apache-tomcat-8.0.26/bin/tomcat-juli.jar  
+		      	-Dcatalina.base=/data0/x/apache-tomcat-8.0.26  
+		      	-Dcatalina.home=/data0/x/apache-tomcat-8.0.26  
+		      	-Djava.io.tmpdir=/data0/x/apache-tomcat-8.0.26/temp org.apache.catalina.startup.Bootstrap start
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+##########################################################################################################################
+#######################################################【服务器】###################################################
+##########################################################################################################################
+
+https://www.docker.com/docker-windows
+
+docker stop TestForMasterMysql && docker rm TestForMasterMysql && docker run --name TestForMasterMysql \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/testfor/code:/var/www/html \
+	-v /data0/testfor/logs:/opt \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php /var/www/html/TestForMasterMysql.php 
+	
+docker stop TestForSlaveMysql && docker rm TestForSlaveMysql && docker run --name TestForSlaveMysql \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/testfor/code:/var/www/html \
+	-v /data0/testfor/logs:/opt \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php /var/www/html/TestForSlaveMysql.php 
+
+docker stop TestForMasterRedis && docker rm TestForMasterRedis && docker run --name TestForMasterRedis \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/testfor/code:/var/www/html \
+	-v /data0/testfor/logs:/opt \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php /var/www/html/TestForMasterRedis.php 
+
+
+docker stop TestForSlaveRedis && docker rm TestForSlaveRedis && docker run --name TestForSlaveRedis \
+	--net=host \
+	-v /etc/localtime:/etc/localtime:ro \
+	-v /data0/testfor/code:/var/www/html \
+	-v /data0/testfor/logs:/opt \
+	-d registry.api.weibo.com/hd-weibo-com/hd-fpm:v4 php /var/www/html/TestForSlaveRedis.php
+
