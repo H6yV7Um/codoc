@@ -1,3 +1,12 @@
+#官网文档：http://nginx.org/en/docs/
+#NG处理一个请求的过程：http://nginx.org/en/docs/http/request_processing.html
+#NG配置项列表：http://nginx.org/en/docs/dirindex.html
+#NG变量列表：http://nginx.org/en/docs/varindex.html
+
+# NG在SERVER里处理一个请求的顺序是：
+
+
+
 user  www www;
 worker_processes  2;
 
