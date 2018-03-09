@@ -1,5 +1,4 @@
 
-》git diff readme.txt 查看文件改了什么
 》git reset  –hard HEAD^ 回退到上一个版本
 》git reset  –hard HEAD^^ 回退到上上一个版本
 》git reset  –hard HEAD~100 回退到前100个版本
@@ -24,7 +23,20 @@
 	5）合并dev分支，使用命令 git merge –no-ff  -m “注释” dev
 
 
+
 --------------------------------------------------------------------------------------
+【 git diff 的使用 】
+1、 git diff readme.txt 
+	查看文件readme.txt改了什么
+2、 git diff 
+	查看未暂存的文件（即未运行git add跟踪的文件）更新了哪些内容
+3、	git diff --cached
+	查看已经暂存起来的文件和上次提交（git commit）时的快照之间的差异
+4、	git diff --name-only tag_3.0.3.11
+	查看当前分支与标签tag_3.0.3.11的差异文件列表
+
+
+
 【Git本地仓库】
 1、 git init
 	将当前目录初始化为一个git仓库，并在该目录下会生成一个名为.git目录

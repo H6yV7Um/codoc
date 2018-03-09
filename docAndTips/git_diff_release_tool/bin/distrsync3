@@ -1,0 +1,366 @@
+#!/bin/sh
+#
+# Copyright (c) 2003 SINA Inc. All rights reserved.
+# Version: 1.2
+# Maintainer : tongjian@staff.sina.com.cn <Network System Dept.>
+#
+# ChangeLog:
+# - 2005/07/26 1.2.1
+# - 2006/06/30 support function of deleting files, lijun3@staff.sina.com.cn
+# - 2006/07/27 fix a problem when dist file with the beginning of "./",
+#lijun3@staff.sina.com.cn
+#
+
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
+export PATH
+
+
+#
+# B.......Begin user command line parameters check.
+################################################################
+#
+
+#
+# Command line parameters.
+#
+User=
+RsyncModule=
+HttpPort=8089
+PasswordFile=
+DistServer=dist.grid.sina.com.cn
+MaxFilesNum=
+DeleteFlag=0
+
+SCRIPT_NAME=`echo $0 | sed -e 's!/! !g' | awk '{print $NF}'`
+
+usage()
+{
+    echo
+    printf >&2 "Usage:\n"
+    printf >&2 "Publish files:  $SCRIPT_NAME <-m module> <-h host> <file|dir>\n"
+    printf >&2 "                 [-u <user>] [-p <port>] [-f <file>] [-c <number>]\n"
+    printf >&2 "Delete files:   $SCRIPT_NAME <-d> <-m module> <-h host> <file|dir>\n"
+    printf >&2 "                 [-u <user>] [-p <port>] [-f <file>] [-c <number>]\n"
+    printf >&2 "       -u dist rsync user name.\n"
+    printf >&2 "       -m dist rsync module name.\n"
+    printf >&2 "       -f dist rsync password file.\n"
+    printf >&2 "       -p dist apache server port.\n"
+    printf >&2 "       -h dist server address.\n"
+    printf >&2 "       -c max file number per rsync transfer.\n"
+    printf >&2 "       -d delete files on webserver.\n"
+    printf >&2 "\n"
+    printf >&2 "Example: \n"
+    printf >&2 'cd /home/tongjian/project/news.sina.com.cn && \'
+    printf >&2 "\n"
+    printf >&2 "    distrsync -u channel01 -f ~/.rsync.secrets -c 50 -m news.sina.com.cn -h distext helloworld.php\n" 
+    printf >&2 "\n"
+    printf >&2 "cd /home/tongjian/project/news.sina.com.cn && \ \n"
+    printf >&2 "    distrsync -d -u channel01 -f ~/.rsync.secrets -c 50 -m tech_sina_com_cn -h distext index.html doc/\n"
+    echo
+    printf >&2 "> Copyright (c) 2003 SINA Inc. All rights reserved.\n"
+    printf >&2 "> tongjian@staff.sina.com.cn 5099 <Network System Dept.>\n"
+    echo
+}
+
+if [ -z "$1" ]; then
+	usage
+	exit 0
+fi
+
+#
+# Get user options.
+#
+while getopts u:m:p:f:c:h:d opt
+do	case "$opt" in
+	u)	User="$OPTARG";;
+	m)	RsyncModule="$OPTARG";;
+	p)	HttpPort="$OPTARG";;
+	h)	DistServer="$OPTARG";;
+	f)	PasswordFile="$OPTARG";;
+	c)	MaxFilesNum="$OPTARG";;
+    d)  DeleteFlag=1;;
+	[?])	usage;
+		exit 1;;
+	esac
+done
+
+shift $((OPTIND-1))
+
+#
+# Set default value.
+#
+[ -z "$User" ]		&& User="$USER"
+[ -z "$HttpPort" ]	&& HttpPort=8080
+[ -z "$PasswordFile" ]	&& PasswordFile=~/.rsync.secrets
+[ -z "$MaxFilesNum" ]	&& MaxFilesNum=20
+
+#
+# E........End user command line parameters check.
+################################################################
+#
+
+#
+# Distribute Server Address and Apache Server Listen Port.
+#
+DIST_HOST="$DistServer"
+DIST_PORT="$HttpPort"
+
+#
+# Distribute Server Rsync Username, Password, Module Name.
+#
+RSYNC_PASS="$PasswordFile"
+RSYNC_USER="$User"
+RSYNC_MODULE="$RsyncModule"
+
+#
+# We need rsync, nc, and other tools etc.
+#
+RSYNC_CMD="/usr/bin/rsync -Rtp --timeout=120"
+NC_CMD="/usr/bin/nc -w 10"
+
+TMP_FILE=`/bin/mktemp /tmp/$SCRIPT_NAME.XXXXXX` || do_exit 1
+RET_FILE=`/bin/mktemp /tmp/$SCRIPT_NAME.XXXXXX` || do_exit 1
+
+if [ $DeleteFlag -eq 1 ]; then
+    DELETE_DIR=`/bin/mktemp -d /tmp/dist.XXXXXX` || do_exit 1
+fi
+
+
+#
+################################################################
+# Function to Send PublishRequest to Distribute Server.
+################################################################
+#
+do_post()
+{
+    if [ -z "$1" ]; then
+	return 1
+    else
+	Post="$1"
+    fi
+
+    Length=`echo $Post | wc -c `
+    Length=`expr $Length + 200`
+
+    echo "\
+POST /publish HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+Host: $DIST_HOST
+Content-Length: $Length
+Connection: close
+
+&module=$RSYNC_MODULE
+&user=$RSYNC_USER
+&files="		>> $TMP_FILE
+
+    echo -e $Post	>> $TMP_FILE
+
+    echo "\
+&pad=
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAA
+"			>> $TMP_FILE
+
+    /bin/cat $TMP_FILE | $NC_CMD $DIST_HOST $DIST_PORT 2>&1 >$RET_FILE
+    if grep submit $RET_FILE >/dev/null; then
+    if [ $DeleteFlag -eq 1 ]; then
+        echo "> Error, delete failed!"
+    else
+	    echo "> Error, publish faild!"
+    fi
+	echo -n "> ErrorCode: "
+	cat $RET_FILE | sed -ne '10,$ p' 
+	echo ">"
+    if [ $DeleteFlag -eq 1 ]; then
+        echo "> Error, delete failed!"
+    else
+	    echo "> Error, publish faild!"
+    fi
+	echo ">"
+    do_exit 1
+    fi
+    /bin/cp /dev/null $TMP_FILE
+}
+
+
+#
+################################################################
+# Function to Rsync File to Distribute Server.
+################################################################
+#
+do_rsync()
+{
+    if [ -z "$1" ]; then
+	return 1
+    else
+	RsyncFiles="$1"
+    fi
+
+    $RSYNC_CMD --password-file=$RSYNC_PASS $RsyncFiles \
+        $RSYNC_USER@$DIST_HOST::$RSYNC_MODULE/ || do_exit 1
+	
+    if $RSYNC_CMD --password-file=$RSYNC_PASS $RSYNC_USER@$DIST_HOST::git_$RSYNC_MODULE/ &> /dev/null
+    then
+    	$RSYNC_CMD --password-file=$RSYNC_PASS $RsyncFiles \
+        $RSYNC_USER@$DIST_HOST::git_$RSYNC_MODULE/ || do_exit 1
+    fi
+}
+
+#
+################################################################
+# Function to Remove temp files and exit.
+################################################################
+#
+do_exit()
+{
+    if [ -z "$1" ]; then
+        errno=0
+    else
+        errno=$1
+    fi
+    [ -d $DELETE_DIR ] && rm -fr $DELETE_DIR
+    [ -f $TMP_FILE ] && rm -f $TMP_FILE
+    [ -f $RET_FILE ] && rm -f $RET_FILE
+
+    exit $errno
+}
+
+#
+################################################################
+# Begin Main Function.
+################################################################
+#
+
+if [ -f $RSYNC_PASS ]; then
+    if [ -w $RSYNC_PASS ]; then
+        chmod 600 $RSYNC_PASS
+    else
+	echo "> error: file permission not correct, can't writeable."
+    fi
+else
+    echo "> error: password file not exist, file: $RSYNC_PASS";
+    do_exit 1
+fi
+
+while [ -n "$1" ]; do
+    echo "> Process $1"
+    FILE=$1
+    FIRST2=`echo $FILE | cut -c1-2`
+    if [ $FIRST2 = "./" ]; then
+        FILE=`echo $FILE | cut -c3-`
+    fi
+
+    if [ -f "$FILE" -o -L "$FILE" ]; then
+    	FILES="$FILES $FILE";
+        if [ $DeleteFlag -eq 1 ]; then
+            cp $FILE $DELETE_DIR/ &&
+            echo -n del > $DELETE_DIR/$FILE
+        fi
+    elif [ -d "$FILE" ]; then
+    	FILES="$FILES `/usr/bin/find $FILE | /bin/sed -e 's!^\./!!'`"
+        if [ $DeleteFlag -eq 1 ]; then
+            find $FILE -type d -exec mkdir -p $DELETE_DIR/'{}' ';' &&
+#           cp -r $FILE $DELETE_DIR/ &&
+            for f in `/usr/bin/find $FILE -type f`; do
+                echo -n del > $DELETE_DIR/$f
+            done
+        fi
+    else
+    	echo "> error: file not exist or not supported file type. '$FILE'"
+        do_exit 1
+    fi
+    shift
+done
+
+
+# echo $FILES
+echo "> OK."
+echo
+
+if [ $DeleteFlag -eq 1 ]; then
+    OLD_PWD=$PWD
+    cd $DELETE_DIR
+    FIRST=`echo $RSYNC_PASS | cut -c1`
+    if [ "$FIRST" = "." ]; then
+        RSYNC_PASS=$OLD_PWD/$RSYNC_PASS
+    fi
+fi
+
+Count=0
+
+for File in $FILES; do
+    #
+    # Ignor zero directory.
+    #
+    [ -d $File ] && continue
+    # echo "> $File"
+
+    #
+    # Prepare rsync file list.
+    #
+    RsyncFiles="$RsyncFiles $File"
+
+    #
+    # Get file's MD5 checksum.
+    #
+    MD5=`md5sum $File | cut -c 1-32`
+
+    #
+    # Prepare PublishRequest Data Structure.
+    #
+
+    PostData="$PostData\n$File\t$MD5"
+
+
+
+    Count=$((Count+1))
+
+    if [ $Count -eq $MaxFilesNum ]; then
+	#
+	# Begin Rsync files and Post PublishRequest.
+	#
+	do_rsync "$RsyncFiles" || do_exit 1
+	do_post  "$PostData"   || do_exit 1
+
+    if [ $DeleteFlag -eq 1 ]; then
+        echo -n "> Delete [$Count] Files. "
+    else
+	    echo -n "> Send [$Count] Files. "
+    fi
+	echo -e "$PostData"
+
+	PostData=
+	Count=0
+	RsyncFiles=
+	echo
+    fi
+done
+
+#
+# Rsync remain files and Post PublishRequest.
+#
+do_rsync "$RsyncFiles" || do_exit 1
+do_post  "$PostData"   || do_exit 1
+
+if [ $DeleteFlag -eq 1 ]; then
+    echo -n "> Delete [$Count] Files. "
+else
+    echo -n "> Send [$Count] Files. "
+fi
+echo -e "$PostData"
+echo "> OK."
+
+#
+# OK, let's finish and clear environment.
+#
+#do_exit 0
+

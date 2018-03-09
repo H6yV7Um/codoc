@@ -1,0 +1,21 @@
+1、将bin和conf两个目录的属性递归改成自己的账户，如 chown -R xiangguang:xiangguang conf bin
+2、将要推送的代码目录放入当前目录来，与conf, bin和Makefile同一级目录，然后修改Makefile文件
+   如要推送hongbaofei2018这个目录，将Makefile内容改成如下即可
+
+   test:
+        $(shell pwd)/bin/distrsync3 -f $(shell pwd)/conf/rsync.secrits \
+                -m all_vic_sina_com_cn_test5 \
+                -h dist.grid.sina.com.cn \
+                -u channel02  hongbaofei2018/
+   all:
+         $(shell pwd)/bin/distrsync3 -f  $(shell pwd)/conf/rsync.secrits \
+                -m all_vic_sina_com_cn_web5 \
+                -h dist.grid.sina.com.cn \
+                -u channel02  hongbaofei2018/
+
+3、必须在当前目录中运行:
+   make test 将代码推到测试环境、
+   make all  将代码推到线上正式环境
+
+
+

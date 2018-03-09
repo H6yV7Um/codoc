@@ -1,0 +1,135 @@
+**********************************************************
+1、Nginx配置proxy_pass转发的/路径问题					 *
+**********************************************************
+
+
+在nginx中配置proxy_pass时，如果是按照正则匹配路径时,
+要注意proxy_pass后的url最后的/,
+当加上了/，则会把匹配的路径部分也给代理走；
+如果没有/，相当于是绝对根路径，则nginx不会把location中匹配的路径部分代理走。
+（注意：这里说的是proxy_pass的url后面的"/"，不是指location 后面的"/"）
+
+location  /static_js/ { 
+	proxy_cache js_cache; 
+	proxy_set_header Host js.test.com; 
+	proxy_pass http://js.test.com/; （这里的最后面的"/"）
+}
+
+如上面的配置，如果请求的url是http://servername/static_js/test.html
+会被代理成http://js.test.com/test.html
+
+而如果这么配置
+location  /static_js/ { 
+	proxy_cache js_cache; 
+	proxy_set_header Host js.test.com; 
+	proxy_pass http://js.test.com; 
+}
+
+则会被代理到http://js.test.com/static_js/test.htm
+
+如果换成下面这样，会报错：
+location ~ ^/static_js/ {
+	proxy_cache js_cache; 
+	proxy_set_header Host js.test.com; 
+	proxy_pass http://js.test.com/; 
+}
+
+但是，这样就没问题了：
+location ~ ^/static_js/ {
+	proxy_cache js_cache; 
+	proxy_set_header Host js.test.com; 
+	proxy_pass http://js.test.com; 
+}
+
+若location里有正则，那么在proxy_pass里要么不带任何uri信息;
+location ~ /(caselist_2017|roi_review|wb_business_ad)/ {
+    proxy_pass          http://all.vic.sina.com.cn; #不带任何uri信息，[/]也不能加
+    proxy_set_header    X-Real-IP $http_x_real_ip;
+    proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+
+
+
+
+
+**********************************************************
+2、location总结及rewrite规则写法	【知识有点旧了】	*
+**********************************************************
+location正则写法的一个示例：
+server{
+        server_name test.local.com;
+
+        #####################################################################
+		#   说明：
+		#   =	表示精确匹配，如 A 中只匹配根目录结尾的请求，后面不能带任何字符串。
+		#   ^~ 	表示uri以某个常规字符串开头，不是正则匹配
+		#   ~ 	表示区分大小写的正则匹配;
+		#   ~* 	表示不区分大小写的正则匹配
+		#   / 	通用匹配, 如果没有其它匹配,任何请求都会匹配到
+		#
+		# 若有多个匹配的话，最终被采用的顺序是：
+		# (location =) > (location 完整路径) > (location ^~ 路径) > (location ~,~* 正则顺序) > (location 部分起始路径) > (/)
+
+		#####################################################################
+
+        #精确匹配 / ，主机名后面不能带任何字符串
+        location  = / {
+          return  200 "conf_A" ;
+        }
+
+	  	#因所有地址都以/开头，所以这条规则将匹配所有请求,但是正则和最长字符串会优先匹配
+        location  / {
+          return  200 "conf_B" ;
+        }
+
+	  	#匹配任何以/documents/开头的地址，匹配符合以后，还要继续往下搜索
+	  	#只有后面的正则表达式没有更佳的匹配到时，才会采用这一条
+        location /documents/ {
+          return  200 "conf_C";
+        }
+
+	  	#匹配任何以/documents/开头的地址(区分大小写)，匹配符合以后，还要继续往下搜索
+	  	#只有后面的正则表达式没有更佳的匹配到时，这一条才会采用这一条
+        location ~ /documents/Abc {
+          return  200 "conf_CC";
+        }
+
+        #匹配任何以/images/开头的地址，匹配符合以后，停止往下搜索正则，采用这一条。
+        location ^~ /images/ {
+          return  200 "conf_D";
+        }
+
+        #匹配所有以gif,jpg或jpeg结尾的请求(~*表示不区分大小写)
+	  	#然而所有以/images/开头的图片会被conf_D处理，所以不会采用这条
+        location ~* \.(gif|jpg|jpeg)$ {
+          return  200 "conf_E";
+        }
+
+        #最长字符匹配到/images/abc，继续往下，会发现conf_D存在
+        location /images/abc {
+          return  200 "conf_G";
+        }
+
+        #只有去掉conf_D才有效：先最长匹配conf_G，继续往下搜索，然后匹配到这一条正则，采用
+        location ~ /images/abc/ {
+          return 200 "conf_H";
+        }
+}
+
+
+按照上面的location写法，以下的匹配示例成立：
+
+curl test.local.com/ 匹配到 conf_A							精确完全匹配，即使/index.html也匹配不了
+curl test.local.com/downloads/download.html 匹配到 conf_B	匹配到conf_B以后，往下没有任何匹配，采用conf_B
+curl test.local.com/images/1.gif 匹配到 conf_D				匹配到D，停止往下
+curl test.local.com/images/abc/def 匹配到 conf_D			最长匹配到conf_G，往下匹配conf_D，停止往下
+															你可以看到 任何以/images/开头的都会匹配到conf_D并停止，
+															conf_G写在这里是没有任何意义的，conf_H是永远轮不到的，
+															这里只是为了说明匹配顺序
+curl test.local.com/documents/document.html 匹配到 conf_C	匹配到conf_C，往下没有任何匹配，采用conf_C
+curl test.local.com/documents/1.jpg 匹配到 conf_E			匹配到conf_C，往下正则匹配到conf_E
+curl test.local.com/documents/Abc.jpg 匹配到 conf_CC		匹配到conf_C，往下正则顺序匹配到conf_CC，不会往下到conf_E
+
+
+
+
