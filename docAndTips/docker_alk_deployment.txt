@@ -6,8 +6,8 @@ export http_proxy="10.39.59.21:3128"
 ssh -i /d/ssh_key_fanqi xiangguang@10.85.47.54
 ssh -i /d/ssh_key_fanqi xiangguang@10.85.47.55
 ssh -i /d/ssh_key_fanqi xiangguang@10.85.47.56
-13884
-asdf1943
+13884:asdf1943
+7:
 -----------------------------------------------【10.85.47.54】-----------------------------------------------
 启动负载器
 docker stop load_balancer && docker rm load_balancer && docker run --name load_balancer \
