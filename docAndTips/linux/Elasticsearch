@@ -1,0 +1,24 @@
+Elasticsearch 
+X-Pack
+Kibana
+X-Pack for Kibana (install instructions)
+Logstash (install)
+X-Pack for Logstash (install instructions)
+Beats (install instructions)
+Elasticsearch Hadoop (install instructions)
+
+
+docker pull docker.elastic.co/elasticsearch/elasticsearch:6.2.3
+docker pull docker.elastic.co/kibana/kibana:6.2.3
+docker pull docker.elastic.co/logstash/logstash:6.2.3
+
+
+
+https://dc.hd.weibo.com/test.php
+
+
+if [[ `docker ps -af name=wbcsc_nginx | wc -l` == 2 ]]; then
+
+
+
+

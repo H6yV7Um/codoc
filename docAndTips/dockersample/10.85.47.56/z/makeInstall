@@ -1,0 +1,69 @@
+exit
+
+JAVA_HOME=/data0/z/jdk1.8.0_144
+export JAVA_HOME
+
+PATH=$PATH:$JAVA_HOME/bin
+export PATH
+
+TOMCAT_HOME=/data0/z/apache-tomcat-9.0.0.M26
+TOMCAT_ROOT=$TOMCAT_HOME/webapps/ROOT
+NGINX_ROOT=/data0/z/nginx/ROOT
+JOB_ROOT=/data0/z/joblib
+DISPLAY=:0
+export DISPLAY
+
+
+rm -rf buildresult
+tar xvf /home/zxg/p56.tar
+
+
+$TOMCAT_HOME/bin/catalina.sh jpda stop
+
+echo "sleep for tomcat shutdown..........."
+sleep 10;
+telnet 127.0.0.1 8021
+sleep 5;
+telnet 127.0.0.1 8031
+sleep 5;
+telnet 127.0.0.1 8041
+sleep 5;
+telnet 127.0.0.1 8051
+sleep 5;
+telnet 10.85.47.56 8061
+sleep 5;
+telnet 127.0.0.1 6501
+sleep 5;
+
+
+
+
+rm -rf $TOMCAT_ROOT/* $NGINX_ROOT/* $JOB_ROOT/*
+
+mv /data0/z/buildresult/56/jobLib/*  $JOB_ROOT/
+
+mv /data0/z/buildresult/56/nginxHtml/*  $NGINX_ROOT/
+
+mv /data0/z/buildresult/56/tomcatROOT/*  $TOMCAT_ROOT/
+
+
+echo "Restart servers......"
+
+java -cp classes:$JOB_ROOT/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZDfsServer /data0/z/dfs 10.85.47.56 8060 10.85.47.56/16 8061 &
+
+java -cp classes:$JOB_ROOT/* com.sina.z.job.PushData "0 30 2 * * ?" "0 33 2 * * ?" "0 35 2 * * ?" 6501 &
+
+
+#Xvfb :0 -screen 0 1024x768x24 &
+
+java -cp classes:$JOB_ROOT/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8020 8021 /data0/z/logs/snap-8020.log &
+java -cp classes:$JOB_ROOT/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8030 8031 /data0/z/logs/snap-8030.log &
+java -cp classes:$JOB_ROOT/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8040 8041 /data0/z/logs/snap-8040.log &
+java -cp classes:$JOB_ROOT/* -Xms256m -Xmx1024m -Xmn128m com.sina.z.job.ZSnapServer 127.0.0.1 8050 8051 /data0/z/logs/snap-8050.log &
+
+
+
+$TOMCAT_HOME/bin/catalina.sh jpda start
+
+
+
