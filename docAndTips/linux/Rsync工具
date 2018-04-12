@@ -1,0 +1,45 @@
+Rsync工具
+
+一、服务端（10.210.227.54）
+	1、配置 /etc/rsyncd.conf
+
+		uid = root
+		gid = root
+		use chroot = no
+		max connections = 200
+		timeout = 300
+		pid file = /var/run/rsyncd.pid
+		lock file = /var/run/rsyncd.lock
+		log file = /var/log/rsyncd.log
+
+
+		[backup]
+		path = /home/backup
+		ignore errors
+		read only = false
+		list = false
+		hosts allow = 110.210.227.33
+		hosts deny = 0.0.0.0/32
+		auth users = rsync_backup
+		secrets file = /etc/rsync.password
+
+	2、配置/etc/rsync.password内容如下（600权限）
+		rsync_backup:zxgpwd
+
+	3、启动服务
+		 rsync --daemon --config /etc/rsyncd.conf
+
+
+二、客户端（110.210.227.33）
+	1、创建密码文件（600权限）mypassword.pw内容如下
+		zxgpwd
+
+	2、上传文件：将/home/test目录同步到10.210.227.54服务器端的backup模块
+		 方法1：
+		 rsync -avz --password-file=./mypassword.pw /home/test rsync_backup@10.210.227.54::backup
+		 方法2：
+		 rsync -avz --password-file=./mypassword.pw /home/test rsync://rsync_backup@10.210.227.54/backup
+
+	3、下载文件
+		 rsync -avz --password-file=./mypassword.pw rsync://rsync_backup@10.210.227.54/backup ./test
+
