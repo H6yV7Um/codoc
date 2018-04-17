@@ -1,4 +1,4 @@
-Rsync工具
+Rsync工具(version 3.0.6  protocol version 30)
 
 一、服务端（10.210.227.54）
 	1、配置 /etc/rsyncd.conf
@@ -18,8 +18,11 @@ Rsync工具
 		ignore errors
 		read only = false
 		list = false
-		hosts allow = 110.210.227.33
+		hosts allow = 10.13.130.23 10.13.130.59 10.210.227.33 10.210.227.54 10.210.234.56 10.210.234.57
 		hosts deny = 0.0.0.0/32
+
+		#如果不需要密码验证的话，可以把下面两行注释掉
+		#但要配置好hosts allow所允许的连接主机ip
 		auth users = rsync_backup
 		secrets file = /etc/rsync.password
 
@@ -36,10 +39,14 @@ Rsync工具
 
 	2、上传文件：将/home/test目录同步到10.210.227.54服务器端的backup模块
 		 方法1：
-		 rsync -avz --password-file=./mypassword.pw /home/test rsync_backup@10.210.227.54::backup
+		 rsync -avz --password-file=./mypassword.pw /home/test rsync_backup@10.210.227.54::backup/an/existing/dir/path
 		 方法2：
 		 rsync -avz --password-file=./mypassword.pw /home/test rsync://rsync_backup@10.210.227.54/backup
 
 	3、下载文件
 		 rsync -avz --password-file=./mypassword.pw rsync://rsync_backup@10.210.227.54/backup ./test
+
+
+
+
 
