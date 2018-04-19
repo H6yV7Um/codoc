@@ -6,7 +6,8 @@ Rsync工具(version 3.0.6  protocol version 30)
 		uid = root
 		gid = root
 		use chroot = no
-		max connections = 200
+		#max connections = 200
+		max connections = 10
 		timeout = 300
 		pid file = /var/run/rsyncd.pid
 		lock file = /var/run/rsyncd.lock
@@ -48,5 +49,5 @@ Rsync工具(version 3.0.6  protocol version 30)
 
 
 
-
+/data1/www/htdocs/
 
