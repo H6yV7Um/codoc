@@ -1,0 +1,3 @@
+/etc/k8s/controller-manager
+
+KUBE_CONTROLLER_MANAGER_ARGS="--master=http://10.210.234.56:8880 --logtostderr=false --log-dir=/var/log/kubernets --v=2"

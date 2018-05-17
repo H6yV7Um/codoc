@@ -1,0 +1,4 @@
+/etc/k8s/apiserver
+
+
+KUBE_API_ARGS="--etcd-servers=http://120.0.0.1:2379 insecure-port=8880 --service-cluster-ip-range=10.210.0.0/16 --service-node-port-range=1-65535 admission_control=NamespaceLifecycle,LimitRange,SecurityContextDeny,ServiceAccount,ResourceQuota --logtostderr=false --log-dir=/var/log/k8s --v=2"

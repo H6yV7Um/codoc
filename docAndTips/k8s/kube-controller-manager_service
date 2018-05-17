@@ -1,0 +1,27 @@
+【设置自启动】
+1、/usr/lib/systemd/system/kube-controller-manager.service
+
+[Unit]
+Description=K8s Controller Manager
+After=kube-apiserver.service
+Requires=kube-apiserver.service
+
+[Service]
+Type=notify
+EnvironmentFile=/etc/k8s/controller-manager
+ExecStart=/usr/local/weiboalk/kubernetes/server/bin/kube-controller-manager $KUBE_CONTROLLER_MANAGER_ARGS
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+
+2、启动命令
+
+systemctl daemon-reload
+systemctl enable kube-controller-manager.service
+systemctl start kube-controller-manager.service
+systemctl restart kube-controller-manager.service
+
+

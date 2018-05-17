@@ -1,0 +1,28 @@
+【设置自启动】
+1、/usr/lib/systemd/system/kube-apiserver.service
+
+[Unit]
+Description=K8s API Service
+After=etcd.service
+Wants=etcd.service
+
+[Service]
+Type=notify
+EnvironmentFile=/etc/k8s/apiserver
+ExecStart=/usr/local/weiboalk/kubernetes/server/bin/kube-apiserver $KUBE_API_ARGS
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+
+2、启动命令
+
+systemctl daemon-reload
+systemctl enable kube-apiserver.service
+systemctl start kube-apiserver.service
+systemctl restart kube-apiserver.service
+
+
+

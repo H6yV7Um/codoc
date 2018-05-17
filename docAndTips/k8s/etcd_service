@@ -1,0 +1,31 @@
+【设置自启动】
+1、/usr/lib/systemd/system/etcd.service
+
+[Unit]
+Description=Etcd Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/lib/etcd/
+EnvironmentFile=-/etc/etcd/etcd.conf
+ExecStart=/usr/local/weiboalk/etcd-v3.3.5-linux-amd64/etcd
+
+[Install]
+WantedBy=multi-user.target
+
+
+2、启动命令
+
+[root@vm23456 etcd]# systemctl daemon-reload
+[root@vm23456 etcd]# systemctl enable etcd.service
+Created symlink from /etc/systemd/system/multi-user.target.wants/etcd.service to /usr/lib/systemd/system/etcd.service.
+[root@vm23456 etcd]# systemctl start etcd.service
+
+
+
+3、检查etcd是不启动正常
+./etcdctl cluster-health
+
+
+

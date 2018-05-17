@@ -1,0 +1,28 @@
+firewall-cmd
+
+firewall-cmd --list-all
+firewall-cmd --list-services
+
+
+#打开、关闭端口
+firewall-cmd --permanent --add-port=80/tcp
+firewall-cmd --permanent --remove-port=80/tcp 
+
+
+#打开、关闭服务，实际就是打开服务对应的端口
+#其相应的配置文件在下面两个目录中：
+#/usr/lib/firewalld
+#/etc/firewalld
+firewall-cmd --permanent --add-service=http 
+firewall-cmd --permanent --remove-service=http
+
+
+#控制docker API 的2375端口
+#只允许10.210.234.*地址的访问2375端口
+firewall-cmd --add-rich-rule="rule family="ipv4" source address="10.210.234.57/24" port protocol="tcp" port="2375" accept" 
+
+#重启加载firewalld
+systemctl restart firewalld
+
+
+
