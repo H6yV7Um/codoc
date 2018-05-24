@@ -1,148 +1,73 @@
-{\rtf1\ansi\ansicpg936\cocoartf1504\cocoasubrtf600
-{\fonttbl\f0\fnil\fcharset0 Tahoma;\f1\fnil\fcharset134 PingFangSC-Regular;\f2\fnil\fcharset134 STSongti-SC-Regular;
+PHP函数include include_once require和require_once的区别
+
+了解下include、include_once、require和require_once这4个函数：
+
+include函数：会将指定的文件读入并且执行里面的程序；
+require函数：会将目标文件的内容读入，并且把自己本身代换成这些读入的内容；
+include_once 函数：在脚本执行期间包含并运行指定文件。此行为和 include 语句类似，唯一区别是如果该文件中已经被包含过，则不会再次包含。如同此语句名字暗示的那样，只会包含一次；
+require_once 函数：和 require 语句完全相同，唯一区别是 PHP 会检查该文件是否已经被包含过，如果是则不会再次包含。
+1 include与require的区别
+include与require除了在处理引入文件的方式不同外，最大的区别就是：include在引入不存文件时产生一个警告且脚本还会继续执行，而require则会导致一个致命性错误且脚本停止执行。
+
+<?php
+  include 'no.php';
+  echo '123';
+?>
+如果no.php文件不存在，echo '123'这句是可以继续执行的.
+
+你看到的可能是类似下边的情况：
+
+点击查看原图
+
+<?php
+require 'no.php';
+echo '123';
+?>
+如果no.php文件不存在，echo '123'这句是不执行的，在require时就停止了。
+
+你看到的可能是类似下边的情况：
+
+点击查看原图
+
+include()与require()的功能相同，但在用法上却有一些不同，include()是有条件包含函数，而 require()则是无条件包含函数。
+
+例如在下面的一个例子中，如果变量$somgthing为真，则将包含文件somefile：
+
+if($something){
+include("somefile");
 }
-{\colortbl;\red255\green255\blue255;\red251\green0\blue7;\red0\green0\blue0;\red184\green14\blue61;
-\red247\green238\blue241;\red255\green255\blue255;}
-{\*\expandedcolortbl;\csgray\c100000;\cssrgb\c100000\c0\c0;\cssrgb\c0\c0\c0;\cssrgb\c78039\c14510\c30588;
-\cssrgb\c97647\c94902\c95686;\csgray\c100000;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww33400\viewh17980\viewkind0
-\deftab720
-\pard\pardeftab720\partightenfactor0
+但不管$something取何值，下面的代码将把文件somefile包含进文件里：
 
-\f0\fs24 \cf2 \expnd0\expndtw0\kerning0
-require 
-\f1\fs28 \cf0 \'b5\'c4\'ca\'b9\'d3\'c3\'b7\'bd\'b7\'a8\'c8\'e7
-\f0  
-\f2 \cf4 \cb5 require("MyRequireFile.php");
-\f0 \cf0 \cb6  
-\f1 \'a1\'a3\'d5\'e2\'b8\'f6\'ba\'af\'ca\'fd\'cd\'a8\'b3\'a3\'b7\'c5\'d4\'da
-\f0  PHP 
-\f1 \'b3\'cc\'d0\'f2\'b5\'c4\'d7\'ee\'c7\'b0\'c3\'e6\'a3\'ac
-\f0 PHP 
-\f1 \'b3\'cc\'d0\'f2\'d4\'da\'d6\'b4\'d0\'d0\'c7\'b0\'a3\'ac\'be\'cd\'bb\'e1\'cf\'c8\'b6\'c1\'c8\'eb
-\f0  require 
-\f1 \'cb\'f9\'d6\'b8\'b6\'a8\'d2\'fd\'c8\'eb\'b5\'c4\'ce\'c4\'bc\'fe\'a3\'ac\'ca\'b9\'cb\'fc\'b1\'e4\'b3\'c9
-\f0  PHP 
-\f1 \'b3\'cc\'d0\'f2\'cd\'f8\'d2\'b3\'b5\'c4\'d2\'bb\'b2\'bf\'b7\'dd\'a1\'a3\'b3\'a3\'d3\'c3\'b5\'c4\'ba\'af\'ca\'fd\'a3\'ac\'d2\'e0\'bf\'c9\'d2\'d4\'d5\'e2\'b8\'f6\'b7\'bd\'b7\'a8\'bd\'ab\'cb\'fc\'d2\'fd\'c8\'eb\'cd\'f8\'d2\'b3\'d6\'d0\'a1\'a3
-\f0 \
-
-\fs24 \cf2 include 
-\f1\fs28 \cf0 \'ca\'b9\'d3\'c3\'b7\'bd\'b7\'a8\'c8\'e7
-\f0  
-\f2 \cf4 \cb5 include("MyIncludeFile.php");
-\f0 \cf0 \cb6  
-\f1 \'a1\'a3\'d5\'e2\'b8\'f6\'ba\'af\'ca\'fd\'d2\'bb\'b0\'e3\'ca\'c7\'b7\'c5\'d4\'da\'c1\'f7\'b3\'cc\'bf\'d8\'d6\'c6\'b5\'c4\'b4\'a6\'c0\'ed\'b2\'bf\'b7\'d6\'d6\'d0\'a1\'a3
-\f0 PHP 
-\f1 \'b3\'cc\'d0\'f2\'cd\'f8\'d2\'b3\'d4\'da\'b6\'c1\'b5\'bd
-\f0  include 
-\f1 \'b5\'c4\'ce\'c4\'bc\'fe\'ca\'b1\'a3\'ac\'b2\'c5\'bd\'ab\'cb\'fc\'b6\'c1\'bd\'f8\'c0\'b4\'a1\'a3\'d5\'e2\'d6\'d6\'b7\'bd\'ca\'bd\'a3\'ac\'bf\'c9\'d2\'d4\'b0\'d1\'b3\'cc\'d0\'f2\'d6\'b4\'d0\'d0\'ca\'b1\'b5\'c4\'c1\'f7\'b3\'cc\'bc\'f2\'b5\'a5\'bb\'af\'a1\'a3
-\f0 \
-\
-
-\f1 \'cb\'fb\'c3\'c7\'c1\'bd\'b8\'f6\'b5\'c4\'d3\'c3\'cd\'be\'ca\'c7\'cd\'ea\'c8\'ab\'d2\'bb\'d1\'f9\'b5\'c4\'a3\'ac\'b2\'bb\'d2\'bb\'b6\'a8\'b7\'c7\'b5\'c3\'c4\'c4\'b8\'f6\'b7\'c5\'d4\'da\'d7\'ee\'c7\'b0\'c3\'e6\'c4\'c4\'b8\'f6\'b7\'c5\'d4\'da\'d6\'d0\'bc\'e4\'a1\'a3\'cb\'fb\'c3\'c7\'d7\'ee\'b8\'f9\'b1\'be\'b5\'c4\'c7\'f8\'b1\'f0\'d4\'da\'d3\'da\'b4\'ed\'ce\'f3\'b4\'a6\'c0\'ed\'b5\'c4\'b7\'bd\'ca\'bd\'b2\'bb\'d2\'bb\'d1\'f9\'a1\'a3
-\f0  \
-\
-require
-\f1 \'d2\'bb\'b8\'f6\'ce\'c4\'bc\'fe\'b4\'e6\'d4\'da\'b4\'ed\'ce\'f3\'b5\'c4\'bb\'b0\'a3\'ac\'c4\'c7\'c3\'b4\'b3\'cc\'d0\'f2\'be\'cd\'bb\'e1\'d6\'d0\'b6\'cf\'d6\'b4\'d0\'d0\'c1\'cb\'a3\'ac\'b2\'a2\'cf\'d4\'ca\'be\'d6\'c2\'c3\'fc\'b4\'ed\'ce\'f3
-\f0  \
-include
-\f1 \'d2\'bb\'b8\'f6\'ce\'c4\'bc\'fe\'b4\'e6\'d4\'da\'b4\'ed\'ce\'f3\'b5\'c4\'bb\'b0\'a3\'ac\'c4\'c7\'c3\'b4\'b3\'cc\'d0\'f2\'b2\'bb\'bb\'e1\'d6\'d0\'b6\'cb\'a3\'ac\'b6\'f8\'ca\'c7\'bc\'cc\'d0\'f8\'d6\'b4\'d0\'d0\'a3\'ac\'b2\'a2\'cf\'d4\'ca\'be\'d2\'bb\'b8\'f6\'be\'af\'b8\'e6\'b4\'ed\'ce\'f3\'a1\'a3
-\f0  \
-\
-\pard\pardeftab720\partightenfactor0
-
-\f1\b \cf0 \'d2\'d4\'cf\'c2\'ce\'aa\'b2\'b9\'b3\'e4\'a3\'ba
-\f0 \uc0\u8232 
-\b0 \
-1. include
-\f1 \'d3\'d0\'b7\'b5\'bb\'d8\'d6\'b5\'a3\'ac\'b6\'f8
-\f0 require
-\f1 \'c3\'bb\'d3\'d0\'a1\'a3
-\f0  \
-\
-2. include()
-\f1 \'b0\'fc\'c0\'a8\'b2\'a2\'d4\'cb\'d0\'d0\'d6\'b8\'b6\'a8\'ce\'c4\'bc\'fe
-\f0  
-\f1 \'d4\'da\'b4\'a6\'c0\'ed\'ca\'a7\'b0\'dc\'ca\'b1
-\f0 include() 
-\f1 \'b2\'fa\'c9\'fa\'d2\'bb\'b8\'f6\'be\'af\'b8\'e6
-\f0 ,
-\f1 \'b1\'bb\'b5\'bc\'c8\'eb\'b5\'c4\'b3\'cc\'d0\'f2\'b4\'fa\'c2\'eb\'b6\'bc\'bb\'e1\'b1\'bb\'d6\'b4\'d0\'d0\'a3\'ac\'b6\'f8\'c7\'d2\'d5\'e2\'d0\'a9\'b3\'cc\'d0\'f2\'d4\'da\'d6\'b4\'d0\'d0\'b5\'c4\'ca\'b1\'ba\'f2\'bb\'e1\'d3\'b5\'d3\'d0\'ba\'cd\'d4\'b4\'ce\'c4\'bc\'fe\'d6\'d0\'ba\'f4\'bd\'d0\'b5\'bd
-\f0 include()
-\f1 \'d3\'ef\'be\'e4\'b5\'c4\'ce\'bb\'d6\'c3\'cf\'e0\'cd\'ac\'b5\'c4\'b1\'e4\'c1\'bf\'b7\'b6\'ce\'a7\'a1\'a3\'c4\'e3\'bf\'c9\'d2\'d4\'b5\'bc\'c8\'eb\'cd\'ac\'d2\'bb\'b8\'f6\'b7\'fe\'ce\'f1\'c6\'f7\'d6\'d0\'b5\'c4\'be\'b2\'cc\'ac\'d2\'b3\'c3\'e6\'a1\'a3
-\f0  \
-\
-3. include_once()
-\f1 \'b5\'c4\'d7\'f7\'d3\'c3\'ba\'cd
-\f0 include()
-\f1 \'ca\'c7\'bc\'b8\'ba\'f5\'cf\'e0\'cd\'ac\'b5\'c4
-\f0  \
-\pard\pardeftab720\partightenfactor0
-
-\f1 \cf0 \'ce\'a8\'d2\'bb\'b5\'c4\'b2\'ee\'b1\'f0\'d4\'da\'d3\'da
-\f0 include_once()
-\f1 \'bb\'e1\'cf\'c8\'bc\'ec\'b2\'e9\'d2\'aa\'b5\'bc\'c8\'eb\'b5\'c4\'b5\'b5\'b0\'b8\'ca\'c7\'b2\'bb\'ca\'c7\'d2\'d1\'be\'ad\'d4\'da\'b8\'c3\'b3\'cc\'d0\'f2\'d6\'d0\'b5\'c4\'c6\'e4\'cb\'fc\'b5\'d8\'b7\'bd\'b1\'bb\'b5\'bc\'c8\'eb\'b9\'fd\'c1\'cb\'a3\'ac\'c8\'e7\'b9\'fb\'d3\'d0\'b5\'c4\'bb\'b0\'be\'cd\'b2\'bb\'bb\'e1\'d4\'d9\'b4\'ce\'d6\'d8\'b8\'b4\'b5\'bc\'c8\'eb\'a3\'a8\'d5\'e2\'cf\'ee\'b9\'a6\'c4\'dc\'d3\'d0\'ca\'b1\'ba\'f2\'ca\'c7\'ba\'dc\'d6\'d8\'d2\'aa\'b5\'c4\'a3\'ac\'b1\'c8\'b7\'bd\'cb\'b5\'d2\'aa\'b5\'bc\'c8\'eb\'b5\'c4\'c0\'ef\'c3\'e6\'d0\'fb\'b8\'e6\'c1\'cb\'d2\'bb\'d0\'a9\'c4\'e3\'d7\'d4\'d0\'d0\'b6\'a8\'d2\'e5\'ba\'c3\'b5\'c4\'ba\'af\'ca\'fd\'a3\'ac\'c4\'c7\'c3\'b4\'c8\'e7\'b9\'fb\'d4\'da\'cd\'ac\'d2\'bb\'b8\'f6\'b3\'cc\'d0\'f2\'d6\'d8\'b8\'b4\'b5\'bc\'c8\'eb\'d5\'e2\'b8\'f6\'ce\'c4\'bc\'fe\'a3\'ac\'d4\'da\'b5\'da\'b6\'fe\'b4\'ce\'b5\'bc\'c8\'eb\'b5\'c4\'ca\'b1\'ba\'f2\'b1\'e3\'bb\'e1\'b7\'a2\'c9\'fa\'b4\'ed\'ce\'f3\'d1\'b6\'cf\'a2\'a3\'ac\'d2\'f2\'ce\'aa
-\f0 PHP
-\f1 \'b2\'bb\'d4\'ca\'d0\'ed\'cf\'e0\'cd\'ac\'c3\'fb\'b3\'c6\'b5\'c4\'ba\'af\'ca\'fd\'b1\'bb\'d6\'d8\'b8\'b4\'d0\'fb\'b8\'e6\'b5\'da\'b6\'fe\'b4\'ce\'a3\'a9\'a1\'a3
-\f0  \
-\
-4. require()
-\f1 \'bb\'e1\'bd\'ab\'c4\'bf\'b1\'ea\'ce\'c4\'bc\'fe\'b5\'c4\'c4\'da\'c8\'dd\'b6\'c1\'c8\'eb\'a3\'ac\'b2\'a2\'c7\'d2\'b0\'d1\'d7\'d4\'bc\'ba\'b1\'be\'c9\'ed\'b4\'fa\'bb\'bb\'b3\'c9\'d5\'e2\'d0\'a9\'b6\'c1\'c8\'eb\'b5\'c4\'c4\'da\'c8\'dd
-\f0  
-\f1 \'d4\'da\'b4\'a6\'c0\'ed\'ca\'a7\'b0\'dc\'ca\'b1
-\f0 require() 
-\f1 \'d4\'f2\'b5\'bc\'d6\'c2\'d2\'bb\'b8\'f6\'d6\'c2\'c3\'fc\'b4\'ed\'a1\'a3
-\f0  \
-
-\f1 \'d5\'e2\'b8\'f6\'b6\'c1\'c8\'eb\'b2\'a2\'c7\'d2\'b4\'fa\'bb\'bb\'b5\'c4\'b6\'af\'d7\'f7\'ca\'c7\'d4\'da
-\f0 PHP
-\f1 \'d2\'fd\'c7\'e6\'b1\'e0\'d2\'eb\'c4\'e3\'b5\'c4\'b3\'cc\'d0\'f2\'b4\'fa\'c2\'eb\'b5\'c4\'ca\'b1\'ba\'f2\'b7\'a2\'c9\'fa\'b5\'c4\'a3\'ac\'b6\'f8\'b2\'bb\'ca\'c7\'b7\'a2\'c9\'fa\'d4\'da
-\f0 PHP
-\f1 \'d2\'fd\'c7\'e6\'bf\'aa\'ca\'bc\'d6\'b4\'d0\'d0\'b1\'e0\'d2\'eb\'ba\'c3\'b5\'c4\'b3\'cc\'d0\'f2\'b4\'fa\'c2\'eb\'b5\'c4\'ca\'b1\'ba\'f2\'a3\'a8
-\f0 PHP 3.0
-\f1 \'d2\'fd\'c7\'e6\'b5\'c4\'b9\'a4\'d7\'f7\'b7\'bd\'ca\'bd\'ca\'c7\'b1\'e0\'d2\'eb\'d2\'bb\'d0\'d0\'d6\'b4\'d0\'d0\'d2\'bb\'d0\'d0\'a3\'ac\'b5\'ab\'ca\'c7\'b5\'bd\'c1\'cb
-\f0 PHP 4.0
-\f1 \'d2\'d4\'ba\'f3\'be\'cd\'d3\'d0\'cb\'f9\'b8\'c4\'b1\'e4\'c1\'cb\'a3\'ac
-\f0 PHP 4.0
-\f1 \'ca\'c7\'cf\'c8\'b0\'d1\'d5\'fb\'b8\'f6\'b3\'cc\'d0\'f2\'b4\'fa\'c2\'eb\'c8\'ab\'b2\'bf\'b1\'e0\'d2\'eb\'cd\'ea\'b3\'c9\'ba\'f3\'a3\'ac\'d4\'d9\'bd\'ab\'d5\'e2\'d0\'a9\'b1\'e0\'d2\'eb\'ba\'c3\'b5\'c4\'b3\'cc\'d0\'f2\'b4\'fa\'c2\'eb\'d2\'bb\'b4\'ce\'d6\'b4\'d0\'d0\'cd\'ea\'b1\'cf\'a3\'ac\'d4\'da\'b1\'e0\'d2\'eb\'b5\'c4\'b9\'fd\'b3\'cc\'d6\'d0\'b2\'bb\'bb\'e1\'d6\'b4\'d0\'d0\'c8\'ce\'ba\'ce\'b3\'cc\'d0\'f2\'b4\'fa\'c2\'eb\'a3\'a9\'a1\'a3
-\f0 require()
-\f1 \'cd\'a8\'b3\'a3\'c0\'b4\'b5\'bc\'c8\'eb\'be\'b2\'cc\'ac\'b5\'c4\'c4\'da\'c8\'dd\'a3\'ac\'b6\'f8
-\f0 include()
-\f1 \'d4\'f2\'ca\'ca\'ba\'cf\'d3\'c3\'b5\'bc\'c8\'eb\'b6\'af\'cc\'ac\'b5\'c4\'b3\'cc\'d0\'f2\'b4\'fa\'c2\'eb\'a1\'a3
-\f0  \
-\
-5. 
-\f1 \'c8\'e7\'cd\'ac
-\f0 include_once()
-\f1 \'a3\'ac
-\f0 require_once()
-\f1 \'bb\'e1\'cf\'c8\'bc\'ec\'b2\'e9\'c4\'bf\'b1\'ea\'ce\'c4\'bc\'fe\'b5\'c4\'c4\'da\'c8\'dd\'ca\'c7\'b2\'bb\'ca\'c7\'d4\'da\'d6\'ae\'c7\'b0\'be\'cd\'d2\'d1\'be\'ad\'b5\'bc\'c8\'eb\'b9\'fd\'c1\'cb\'a3\'ac\'c8\'e7\'b9\'fb\'ca\'c7\'b5\'c4\'bb\'b0\'a3\'ac\'b1\'e3\'b2\'bb\'bb\'e1\'d4\'d9\'b4\'ce\'d6\'d8\'b8\'b4\'b5\'bc\'c8\'eb\'cd\'ac\'d1\'f9\'b5\'c4\'c4\'da\'c8\'dd\'a1\'a3
-\f0  \
-\
-5. require
-\f1 \'ca\'c7\'ce\'de\'cc\'f5\'bc\'fe\'b0\'fc\'ba\'ac\'d2\'b2\'be\'cd\'ca\'c7\'c8\'e7\'b9\'fb\'d2\'bb\'b8\'f6\'c1\'f7\'b3\'cc\'c0\'ef\'bc\'d3\'c8\'eb
-\f0 require,
-\f1 \'ce\'de\'c2\'db\'cc\'f5\'bc\'fe\'b3\'c9\'c1\'a2\'d3\'eb\'b7\'f1\'b6\'bc\'bb\'e1\'cf\'c8\'d6\'b4\'d0\'d0
-\f0 require
-\f1 \'a1\'a3
-\f0  \
-\
-7. require
-\f1 \'cd\'a8\'b3\'a3\'b7\'c5\'d4\'da
-\f0 PHP
-\f1 \'b3\'cc\'d0\'f2\'b5\'c4\'d7\'ee\'c7\'b0\'c3\'e6\'a3\'ac
-\f0 PHP
-\f1 \'b3\'cc\'d0\'f2\'d4\'da\'d6\'b4\'d0\'d0\'c7\'b0\'a3\'ac\'be\'cd\'bb\'e1\'cf\'c8\'b6\'c1\'c8\'eb
-\f0 require
-\f1 \'cb\'f9\'d6\'b8\'b6\'a8\'d2\'fd\'c8\'eb\'b5\'c4\'ce\'c4\'bc\'fe\'a3\'ac\'ca\'b9\'cb\'fc\'b1\'e4\'b3\'c9
-\f0 PHP
-\f1 \'b3\'cc\'d0\'f2\'cd\'f8\'d2\'b3\'b5\'c4\'d2\'bb\'b2\'bf\'b7\'dd\'a1\'a3\'b3\'a3\'d3\'c3\'b5\'c4\'ba\'af\'ca\'fd\'a3\'ac\'d2\'e0\'bf\'c9\'d2\'d4\'d5\'e2\'b8\'f6\'b7\'bd\'b7\'a8\'bd\'ab\'cb\'fc\'d2\'fd\'c8\'eb\'cd\'f8\'d2\'b3\'d6\'d0\'a1\'a3
-\f0  \
-\
-8. include
-\f1 \'d2\'bb\'b0\'e3\'ca\'c7\'b7\'c5\'d4\'da\'c1\'f7\'b3\'cc\'bf\'d8\'d6\'c6\'b5\'c4\'b4\'a6\'c0\'ed\'b2\'bf\'b7\'d6\'d6\'d0
-\f0 PHP
-\f1 \'b3\'cc\'d0\'f2\'cd\'f8\'d2\'b3\'d4\'da\'b6\'c1\'b5\'bd
-\f0 include
-\f1 \'b5\'c4\'ce\'c4\'bc\'fe\'ca\'b1\'a3\'ac\'b2\'c5\'bd\'ab\'cb\'fc\'b6\'c1\'bd\'f8\'c0\'b4\'a1\'a3\'d5\'e2\'d6\'d6\'b7\'bd\'ca\'bd\'bf\'c9\'d2\'d4\'b0\'d1\'b3\'cc\'d0\'f2\'d6\'b4\'d0\'d0\'ca\'b1\'b5\'c4\'c1\'f7\'b3\'cc\'bc\'f2\'b5\'a5\'bb\'af\'a1\'a3\
+if($something){
+require("somefile");
 }
+2 include与include_once的区别（require与require_once的区别）
+include_once （require_once）语句在脚本执行期间包含并运行指定文件。此行为和 include （require）语句类似，区别是如果该文件中的代码已经被包含了，则不会再次包含，只会包含一次。include_once（require_once）需要查询一遍已加载的文件列表, 确认是否存在, 然后再加载。
+
+<?php
+require '1.php';
+require '1.php';
+?>
+这种情况下1.php被包含两次。
+
+<?php
+require '1.php';
+require_once '1.php';
+?>
+这种情况下，第二次包含时，是不会进行包含的。
+
+include（require）与include_once（require_once）的抉择问题
+通常：include_once和require_once会有性能上的下降，因为他需要判断之前是否包含过。一般情况下，也不太需要去考虑，除非这已经影响到你程序的性能了。
+
+如果使用 APC 尽量也不要用include_once，因为apc.include_once_override配置项没有很好的被实现（详情百度）。
+
+注1：Alternative PHP Cache (APC)是一种对PHP有效的开放源高速缓冲储存器工具，它能够缓存opcode的php中间码。
+
+require通常使用方法，这个函数通常放在 PHP 程序的最前面，PHP 程序在执行前，就会先读入 require 所指定引入的文件，使它变成 PHP 程序网页的一部份。常用的函数，亦可以这个方法将它引入网页中。
+
+include通常使用方法，这个函数一般是放在流程控制的处理部分中。PHP 程序网页在读到 include 的文件时，才将它读进来。这种方式，可以把程序执行时的流程简单化。
+
+return 在返回引用的时候加上括号不但效率低而且会造成逻辑错误。那么这几个函数呢？
+
+理论上来说：include和require后面加不加括号对执行结果没有区别，但是加上括号效率较低，所以后面能不加括号就不加括号。
+

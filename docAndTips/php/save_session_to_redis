@@ -1,0 +1,92 @@
+Redis保存PHP Session方法
+
+
+目录
+1 环境
+2 配置PHP
+2.1 修改php.ini
+2.2 修改php-fpm.conf
+2.3 PHP代码
+3 测试
+PHP默认就支持保存session到redis，不需任何额外代码。
+
+Redis保存session用的命令是setex，用redis-cli monitor实时监测可以检测到。
+
+setex命令的语法：
+
+setex(key, time, value)
+其中，key是键值，time是过期时间，value是字符串类型的值。
+
+具体步骤如下。
+
+1 环境
+要用Redis保存session，首先必须要满足下面的条件：
+
+必须有一台安装了Redis服务器。本例用本地服务器Redis，IP为：127.0.0.1，端口：6379。
+PHP安装了phpredis扩展，通过phpinfo()能够看到扩展，如下图。
+
+PHP能正常访问Redis。测试代码如下，
+<?php
+    $redis = new Redis();
+    $redis->connect('127.0.0.1', 6379);
+    $count = $redis->exists('count') ? $redis->get('count') : 1;
+    echo $count;
+    $redis->set('count', ++$count);
+刷新页面，如果看到数字不断增加，说明Redis环境正常。
+
+2 配置PHP
+安装了Redis扩展后，phpinfo()输出中会看到session的支持句柄，其中包含了redis，如下：
+
+
+
+有一点要注意的是，Redis的过期时间最大值为2147483647，也就是十六进制的7fffffff。
+
+所以，session配置中回收时间session.gc_maxlifetime的值不能超过这个数字。
+
+否则Redis用setex命令保存session时，过期时间time为负数，相当于直接删除了这个key。
+
+这样不仅不会保存成功，PHP还会返回下面的错误：
+
+ Warning: Unknown: Failed to write session data (redis). Please verify that the current setting of session.save_path is correct (127.0.0.1:6379) in Unknown on line 0
+接着，修改php配置，总共有3种方法，如下选择其中一种即可：
+
+2.1 修改php.ini
+打开 php.ini 文件，设置下面两个值：
+
+session.save_handler = redis
+session.save_path = "tcp://127.0.0.1:6379"
+如果Redis有密码，用下面的配置：
+
+session.save_path = "tcp://127.0.0.1:6379?auth=password"
+配置完成后，重启PHP-FPM。
+
+2.2 修改php-fpm.conf
+PHP-FPM的配置文件/etc/php-fpm.conf或者/etc/php-fpm.d/*.conf中，也有session的配置。
+
+它们的session配置优先级比php.ini高，会覆盖php.ini中的配置。
+
+所以，也直接在这里面改：
+
+php_value[session.save_handler] = redis
+php_value[session.save_path] = "tcp://127.0.0.1:6379"
+如果用php.ini的配置，则需要把这两行用;注释掉。
+
+然后重启PHP-FPM。
+
+2.3 PHP代码
+也可以在运行的PHP代码中配置session，如下。
+
+ini_set('session.save_handler', 'redis');
+ini_set('session.save_path', 'tcp://127.0.0.1:6379');
+3 测试
+写一段PHP测试代码，如下：
+
+session_start();
+$count = isset($_SESSION['count']) ? $_SESSION['count'] : 1;
+
+echo $count;
+
+$_SESSION['count'] = ++$count;
+如果刷新页面看到数字不断增加，说明配置Redis保存session成功。
+
+ 
