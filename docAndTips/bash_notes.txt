@@ -1,5 +1,4 @@
  
-
 -b file            若文件存在且是一个块特殊文件，则为真
 -c file            若文件存在且是一个字符特殊文件，则为真
 -d file            若文件存在且是一个目录，则为真
@@ -39,6 +38,7 @@ $$                 当前shell的进程号。对于shell脚本，这是其正在
 $!                 前一个后台命令的进程号
 
 
+###########################################################################################
 
 一. 条件测试
 1. 测试文件状态
@@ -90,70 +90,152 @@ $!                 前一个后台命令的进程号
 ###########################################################################################
 
 
-Linux字符串截取命令
-一、简单截取
+二、字符串截取、${}的用法和变量的间接引用
 
-假设有变量 var=http://www.google.com/test.htm
-
-1、 # 号截取，删除左边字符，保留右边字符。
-echo ${var#*//}
-其中 var 是变量名，# 号是运算符，*// 表示从左边开始删除第一个 // 号及左边的所有字符
-即删除 http://
-结果是 ：www.google.com/test.htm
-
- 
-
-2、 ## 号截取，删除左边字符，保留右边字符。
-echo ${var##*/}
-##*/ 表示从左边开始删除最后（最右边）一个 / 号及左边的所有字符
-即删除 http://www.google.com/         
-结果是 test.htm
-
- 
-
-3、 %号截取，删除右边字符，保留左边字符
-echo ${var%/*}
-%/* 表示从右边开始，删除第一个 / 号及右边的字符
-结果是：http://www.google.com
-
- 
-
-4、 %% 号截取，删除右边字符，保留左边字符
-
-echo ${var%%/*}
-%%/* 表示从右边开始，删除最后（最左边）一个 / 号及右边的字符
-结果是：http:
-
- 
-
-5、 从左边第几个字符开始，及字符的个数
-echo ${var:0:5}
-其中的 0 表示左边第一个字符开始，5 表示字符的总个数。
-结果是：http:
-
- 
-
-6、 从左边第几个字符开始，一直到结束。
-echo ${var:7}
-其中的 7 表示左边第8个字符开始，一直到结束。
-结果是 ：www.google.com/test.htm
-
- 
-
-7、 从右边第几个字符开始，及字符的个数
-echo ${var:0-7:3}
-其中的 0-7 表示右边算起第七个字符开始，3 表示字符的个数。
-结果是：test
-
- 
-
-8、 从右边第几个字符开始，一直到结束。
-echo ${var:0-7}
-表示从右边第七个字符开始，一直到结束。
-结果是：test.htm
-
-注：（左边的第一个字符是用 0 表示，右边的第一个字符用 0-1 表示）
-
- 
+1、${VAR}，取出变量VAR值
+a=hjks
+echo ${a}
 
 
+2、${VAR:-DEFAULT}，VAR没有定义或者为空则输出$DEFAULT的值（VAR不变）
+unset a 
+echo ${a:-hello};echo $a
+
+
+3、${VAR:=DEFAULT}，VAR没有定义或空则为$DEFAULT的值
+echo ${a:=hello};echo $a
+
+
+4、${VAR:+VALUE}，VAR定义则输出$VALUE,否则为空字符串（VAR不变）
+a=hello
+echo ${a:+yemo};echo $a
+
+unset a
+echo ${a:+yemo};echo $a
+
+
+5、${VAR?MSG}，VAR未定义则打印$MSG
+unset a
+echo ${a?this is null}
+
+a=123
+echo ${a?this is null}
+
+
+6、${VAR:?MSG}，VAR未定义或者为空则打印$MSG
+unset a
+echo ${a:?this is null}
+
+typeset -i a
+echo ${a:?this is null}
+
+
+7、${!PERFIX*} 或 ${!PERFIX@} ，匹配所有以PERFIX开头的变量
+echo ${!RAND*}
+echo ${!RAND@}
+
+
+8、${!VAR}变量间接引用，也可以用 eval echo \$$VAR
+a=b
+b=12345
+echo ${!a}
+eval echo \$$a
+
+
+9、${#STR}，返回STR长度
+b=12345
+echo ${#b}
+
+
+10、${STR^^}，把STR中的所有小写字母转换为大写输出(不改变值)
+unset a b
+a="hello Rie Kugimiya"
+echo ${a^^}
+echo $a
+
+
+11、${STR,,}，把STR中的所有大写字母转换为小写输出（不改变值）
+echo ${a,,}
+echo $a
+
+
+12、${STR:POSITON},从$POSITON位置提取子串
+echo $a
+echo ${a:5}
+echo ${a: -5}   #反向从末尾开始计数$POSITON位置的子串，注意负号前的空格
+
+
+13、${STR:POSITON:LENGTH}，从$POSITON位置提取长度为$LENGTH子串
+echo $a
+echo ${a:5:6}           #从第5个开始向后取6个字符
+echo ${a:5:-3}          #从第五个开始去去掉倒数3个字符 
+echo ${a: -5:-3}        #取倒数5个字符去掉倒数3个字符
+                        #由于减号是前面的关键字所以POSITON前面得加空格
+
+
+14、${STR#SUBSTR}，从$STR头查找匹配，删除最短匹配$SUBSTR的子串；
+    ${arry#SUBSTR}，对于数组，对每个数组元素单独匹配，执行删除子串操作
+
+a="daisuki Rie Kugimiya"
+echo ${a#*R}               #从左向右匹配*R匹配到daisuki R，删除并返回剩下的
+b=(daisuki Rie Kugimiya)
+echo ${b[@]}
+echo ${b[@]#*i}            #删除了b[0]的dai,b[1]的Ri,b[2]的 Kugi
+
+
+
+15、${STR##SUBSTR}，从$STR头部查找匹配，删除最长匹配$SUBSTR的子串
+echo $a 
+echo ${a##*i}
+echo ${b[@]##*i}
+
+
+16、${STR%SUBSTR}，从$STR尾部查找匹配，删除最短匹配$SUBSTR的子串
+echo ${a%i*}
+echo ${b[@]%i*}
+
+
+17、${STR%%SUBSTR}，从$STR尾部查找匹配，删除最长匹配$SUBSTR的子串
+echo ${a%%i*}
+echo ${b[@]%%i*}
+
+
+18、${STR/SUBSTR/REPLACE}，使用$REPALCE替换$STR第一个匹配的$SUBSTR
+echo ${a/i/%%/}
+echo ${b[@]/i/%%/}
+
+
+19、${STR//SUBSTR/REPLACE}，使用$REPALCE替换$STR中所有匹配的$SUBSTR
+echo ${a//i/%%/}
+echo ${b[@]//i/%%/}
+
+
+20、${STR/#SUBSTR/REPLACE}，$STR中以$STR开头的，则用$REPLACE来替换匹配到的$SUBSTR
+echo ${a/#su/%%}
+echo ${a/#dai/%%}
+echo ${b[@]/#K/@}
+echo ${b[@]/#K/$$}
+echo ${b[@]/#K/$#}
+echo ${b[@]/#K/666}
+
+
+21、${STR/%SUBSTR/REPLACE}，$STR中以$SUBSTR结尾的，则用$REPLACE来替换匹配到的$SUBSTR
+echo ${a/%dai/##}
+echo ${a/%miya/##}
+echo ${b[@]/%ie/666}
+echo ${b[@]/%ie/$$}
+
+
+Bash函数或者脚本接受连续参数到数组
+#1、使用shift
+ typeset -a arry
+ for i in `seq 0 $(($#-1))`;do
+             arry[i]=$1
+        shift
+        done
+#2、使用变量的间接引用
+typeset -a arry
+for i in `seq 1 $$#`;do
+        #arry[$((i-1))]=${!i}
+        arry[$((i-1))]=`eval echo \$$i`
+done
