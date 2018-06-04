@@ -1,0 +1,19 @@
+一、分库后的分页问题方案
+	如，表里有 id 和 createtime 两个字段，表按id哈希分库的，查询按createtime分页
+	每页10条信息
+
+方案1：
+	1）第1页时，从各个库里查询第1页数据 ： 
+		select * from T where createtime > 0 order by createtime limit 10;
+	2）然后在内存中对所有库的前10数据进行内存排序
+
+	3）第2页的时候，需要把上页的最大createtime时间传入，记为createtime_last_page_max
+	4）重复1）到2）的步骤操作，sql如下：
+		select * from T where createtime > createtime_last_page_max order by createtime limit 10;
+
+方案2：
+	借助适于大数据列式存储的数据库，如hbase等，对于亿级别的k-v的查询效率非常高的数据库
+	将id和createtime存入列式数据库，排序分布在hbase中进行，然后取出对应页的所有id，
+	然后通过id到数据库中去查询更详细的数据
+
+	1）

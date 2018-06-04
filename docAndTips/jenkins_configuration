@@ -1,0 +1,8 @@
+1、安装gitlab
+	系统管理->管理插件
+	在‘已安装’中看‘GitLab Plugin’是否已安装
+	否则，在‘可选插件’选择‘GitLab Plugin’进行安装
+
+2、找一个可用的sshkey私钥，
+
+rsync -avz /var/jenkins_home/workspace/weibo_alk_h5_simulator/* 10.85.47.55::wbcsc_www/simulated/h5

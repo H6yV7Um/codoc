@@ -6,8 +6,8 @@ return array(
 	'db' => array(
 		'host'	=> 'localhost',
 		'username'	=> 'root',
-		'password'	=> '123456',
-		'dbname'	=> 'project',
+		'password'	=> '',
+		'dbname'	=> 'fastphp',
 	),
 
 	// 默认控制器和操作名

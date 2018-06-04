@@ -58,6 +58,7 @@ class ItemController extends Controller
 
         $this->assign('title', '管理条目');
         $this->assign('item', $item);
+        $this->assign('postUrl', '/item/add');
         $this->render();
     }
     
